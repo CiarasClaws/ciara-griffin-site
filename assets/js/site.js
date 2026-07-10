@@ -56,7 +56,7 @@ const REVEAL_SEL = [
   '.weft__mark', '.weft__wordmark', '.retinue-caps', '.weft__lede',
   '.wct-cards .wct-card', '.specimen', '.sat-strip', '.weft__exit',
   '.coda__mark', '.coda__braid', '.coda__thesis', '.coda__contact',
-  '.coda__surfaces', '.coda__foot',
+  '.coda__surfaces',
 ].join(', ');
 
 $$('.manifesto, .weft, .coda').forEach((section) => {
@@ -119,6 +119,26 @@ function buildSpine() {
   const inset = (s) => Math.min(130, (s.bot - s.top) * 0.14);
 
   const NS = 'http://www.w3.org/2000/svg';
+  const defs = document.createElementNS(NS, 'defs');
+  spine.appendChild(defs);
+  let gradN = 0;
+  /* the thread dips into the next section's dye as it crosses the seam */
+  function dyeGradient(from, to, y1, y2, fromOp = 1, toOp = 1) {
+    const g = document.createElementNS(NS, 'linearGradient');
+    g.id = `dye${gradN++}`;
+    g.setAttribute('gradientUnits', 'userSpaceOnUse');
+    g.setAttribute('x1', 0); g.setAttribute('x2', 0);
+    g.setAttribute('y1', y1); g.setAttribute('y2', y2);
+    for (const [off, col, op] of [[0, from, fromOp], [1, to, toOp]]) {
+      const s = document.createElementNS(NS, 'stop');
+      s.setAttribute('offset', off);
+      s.setAttribute('stop-color', col);
+      s.setAttribute('stop-opacity', op);
+      g.appendChild(s);
+    }
+    defs.appendChild(g);
+    return `url(#${g.id})`;
+  }
   function addPath(d, stroke, width, extra = {}) {
     const p = document.createElementNS(NS, 'path');
     p.setAttribute('d', d);
@@ -126,7 +146,6 @@ function buildSpine() {
     p.setAttribute('stroke-width', width);
     if (extra.opacity) p.setAttribute('opacity', extra.opacity);
     if (extra.transform) p.setAttribute('transform', extra.transform);
-    if (extra.dash) p.setAttribute('stroke-dasharray', extra.dash);
     spine.appendChild(p);
     return p;
   }
@@ -169,7 +188,8 @@ function buildSpine() {
     const px = narrow ? L : L + 4;
     const d = `M ${fmt(px)},${fmt(man.bot - inset(man))} ${cross(px, man.bot - inset(man), x, ret.top + e)}`
       + bulgeRun(x, ret.top + e, ret.bot - e, narrow ? 4 : 26);
-    leg([addPath(d, '#3D544B', 1.5, { opacity: .8 })], man.bot - inset(man), ret.bot - e);
+    const dye = dyeGradient('#F3EFE7', '#3D544B', man.bot - inset(man), ret.top + e, .55, .8);
+    leg([addPath(d, dye, 1.5)], man.bot - inset(man), ret.bot - e);
   }
 
   /* II — hop node to node, the net */
@@ -187,7 +207,8 @@ function buildSpine() {
       d += ` L ${fmt(nx)},${fmt(ny)}`;
       if (k < fr.length - 1) nodes.push(addNode(nx, ny, '#37444E'));
     }
-    leg([addPath(d, '#37444E', 1.5, { opacity: .8 })], ret.bot - inset(ret), y1, nodes);
+    const dye = dyeGradient('#3D544B', '#37444E', ret.bot - inset(ret), y0, .8, .8);
+    leg([addPath(d, dye, 1.5)], ret.bot - inset(ret), y1, nodes);
   }
 
   /* III — zigzag stitch, lime over black. the toolshop */
@@ -202,8 +223,8 @@ function buildSpine() {
     let k = 0;
     for (let y = y0 + step; y < y1; y += step, k++) d += ` L ${fmt(x + (k % 2 ? -amp : amp))},${fmt(y)}`;
     d += ` L ${fmt(x)},${fmt(y1)}`;
-    const under = addPath(d, '#000', 3, { opacity: .9 });
-    const over = addPath(d, '#CBFF04', 1.5);
+    const under = addPath(d, dyeGradient('#37444E', '#000', en.bot - inset(en), y0, .85, .9), 3);
+    const over = addPath(d, dyeGradient('#37444E', '#CBFF04', en.bot - inset(en), y0, 0, 1), 1.5);
     leg([under, over], en.bot - inset(en), y1);
   }
 
@@ -215,7 +236,8 @@ function buildSpine() {
     const y0 = sat.top + e, y1 = sat.bot - e;
     const jogY = y0 - Math.min(60, inset(wct));
     let d = `M ${fmt(px)},${fmt(wct.bot - inset(wct))} L ${fmt(px)},${fmt(jogY)} L ${fmt(x)},${fmt(jogY)} L ${fmt(x)},${fmt(y1)}`;
-    leg([addPath(d, '#0F0F0F', 1.5, { opacity: .85 })], wct.bot - inset(wct), y1);
+    const dye = dyeGradient('#CBFF04', '#0F0F0F', wct.bot - inset(wct), y0, .9, .85);
+    leg([addPath(d, dye, 1.5)], wct.bot - inset(wct), y1);
   }
 
   /* V — IKB with a misregistered pink ghost. the press */
@@ -226,8 +248,8 @@ function buildSpine() {
     const y0 = attcu.top + e, y1 = attcu.bot - e;
     const d = `M ${fmt(px)},${fmt(sat.bot - inset(sat))} ${cross(px, sat.bot - inset(sat), x, y0)}`
       + bulgeRun(x, y0, y1, narrow ? 4 : 22);
-    const ghost = addPath(d, '#FF48B4', 1.5, { opacity: .65, transform: 'translate(2.5,-2)' });
-    const ink = addPath(d, '#002FA7', 1.5, { opacity: .9 });
+    const ghost = addPath(d, dyeGradient('#FF48B4', '#FF48B4', sat.bot - inset(sat), y0, 0, .65), 1.5, { transform: 'translate(2.5,-2)' });
+    const ink = addPath(d, dyeGradient('#0F0F0F', '#002FA7', sat.bot - inset(sat), y0, .85, .9), 1.5);
     leg([ghost, ink], sat.bot - inset(sat), y1);
   }
 
@@ -235,7 +257,8 @@ function buildSpine() {
   {
     const px = narrow ? L : R;
     const d = `M ${fmt(px)},${fmt(attcu.bot - inset(attcu))} ${cross(px, attcu.bot - inset(attcu), W / 2, braidY)}`;
-    leg([addPath(d, 'rgba(243,239,231,.6)', 1.5)], attcu.bot - inset(attcu), braidY);
+    const dye = dyeGradient('#002FA7', '#F3EFE7', attcu.bot - inset(attcu), coda.top + 60, .9, .6);
+    leg([addPath(d, dye, 1.5)], attcu.bot - inset(attcu), braidY);
   }
 
   for (const l of legs) {
@@ -345,20 +368,39 @@ if (finePointer && !reduced) {
   const tctx = trail.getContext('2d');
   let pts = [];
   let sx = -100, sy = -100, txp = -100, typ = -100, seen = false;
+  let lastMove = 0, trailCleared = false;
 
-  function sizeTrail() { trail.width = innerWidth; trail.height = innerHeight; }
+  function sizeTrail() {
+    const dpr = Math.min(devicePixelRatio, 2);
+    trail.width = innerWidth * dpr;
+    trail.height = innerHeight * dpr;
+    tctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
   sizeTrail();
   addEventListener('resize', sizeTrail);
 
   addEventListener('pointermove', (e) => {
     txp = e.clientX; typ = e.clientY;
-    if (!seen) { seen = true; sx = txp; sy = typ; shuttle.style.opacity = 1; }
+    lastMove = performance.now();
+    if (!seen) { seen = true; sx = txp; sy = typ; }
+    shuttle.style.opacity = 1;
   }, { passive: true });
   document.documentElement.addEventListener('pointerleave', () => {
     shuttle.style.opacity = 0; pts = [];
   });
 
   (function shuttleLoop() {
+    requestAnimationFrame(shuttleLoop);
+    /* idle: nothing has moved for a while and the trail is gone */
+    if (seen && performance.now() - lastMove > 900) {
+      if (!trailCleared) {
+        tctx.clearRect(0, 0, innerWidth, innerHeight);
+        pts = [];
+        trailCleared = true;
+      }
+      return;
+    }
+    trailCleared = false;
     sx += (txp - sx) * 0.24;
     sy += (typ - sy) * 0.24;
     shuttle.style.transform = `translate(${sx - 3.5}px, ${sy - 3.5}px)`;
@@ -366,7 +408,7 @@ if (finePointer && !reduced) {
       pts.push({ x: sx, y: sy });
       if (pts.length > 26) pts.shift();
     }
-    tctx.clearRect(0, 0, trail.width, trail.height);
+    tctx.clearRect(0, 0, innerWidth, innerHeight);
     if (pts.length > 2) {
       for (let i = 1; i < pts.length; i++) {
         tctx.beginPath();
@@ -379,7 +421,6 @@ if (finePointer && !reduced) {
       }
       tctx.globalAlpha = 1;
     }
-    requestAnimationFrame(shuttleLoop);
   })();
 }
 
@@ -394,10 +435,16 @@ if (enSection && enCanvas) {
 
   function sizeEn() {
     const dpr = Math.min(devicePixelRatio, 2);
+    const pw = ew, ph = eh;
     ew = enSection.clientWidth; eh = enSection.clientHeight;
     enCanvas.width = ew * dpr; enCanvas.height = eh * dpr;
     ectx = enCanvas.getContext('2d');
     ectx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    if (nodes.length && pw && ph) {
+      /* keep the constellation, rescale it */
+      for (const n of nodes) { n.x *= ew / pw; n.y *= eh / ph; }
+      return;
+    }
     const count = clamp(Math.round((ew * eh) / 26000), 26, 64);
     nodes = Array.from({ length: count }, () => ({
       x: Math.random() * ew, y: Math.random() * eh,
@@ -497,10 +544,19 @@ if (enSection && enCanvas) {
 const strip = $('.sat-strip');
 const track = $('.sat-strip__track');
 if (strip && track && finePointer && !matchMedia('(pointer: coarse)').matches) {
-  let x = 0, vx = 0, dragging = false, startX = 0, lastX = 0, lastT = 0, moved = false, raf = null;
+  let x = 0, vx = 0, dragging = false, startX = 0, lastX = 0, lastT = 0, raf = null;
   const bounds = () => Math.min(0, strip.clientWidth - track.scrollWidth);
 
   function apply() { track.style.transform = `translateX(${x}px)`; }
+
+  /* keyboard access to the strip */
+  strip.addEventListener('keydown', (e) => {
+    if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+    e.preventDefault();
+    x = clamp(x + (e.key === 'ArrowLeft' ? 160 : -160), bounds(), 0);
+    apply();
+  });
+  addEventListener('resize', () => { x = clamp(x, bounds(), 0); apply(); });
   function momentum() {
     if (dragging) return;
     vx *= 0.93;
@@ -510,7 +566,7 @@ if (strip && track && finePointer && !matchMedia('(pointer: coarse)').matches) {
   }
 
   strip.addEventListener('pointerdown', (e) => {
-    dragging = true; moved = false;
+    dragging = true;
     startX = e.clientX - x; lastX = e.clientX; lastT = performance.now();
     vx = 0;
     if (raf) cancelAnimationFrame(raf);
@@ -524,7 +580,6 @@ if (strip && track && finePointer && !matchMedia('(pointer: coarse)').matches) {
     cursorChip.style.top = `${e.clientY - r.top}px`;
     if (!dragging) return;
     const nx = e.clientX - startX;
-    if (Math.abs(nx - x) > 2) moved = true;
     x = clamp(nx, bounds(), 0);
     const now = performance.now();
     vx = ((e.clientX - lastX) / Math.max(now - lastT, 1)) * 14;
@@ -579,4 +634,5 @@ function buildAll() {
 let rsTimer;
 addEventListener('resize', () => { clearTimeout(rsTimer); rsTimer = setTimeout(buildAll, 220); });
 addEventListener('load', buildAll);
+if (document.fonts) document.fonts.ready.then(buildAll);
 buildAll();
