@@ -7,12 +7,10 @@
 
 :root {
   --ink: #0B0D12;
-  --ink-lift: #12151C;
   --cream: #F3EFE7;
   --metal: #B8B2A6;
 
   /* thread hues (glow variants of the brand accents) */
-  --t-warp: #F3EFE7;
   --t-retinue: #6FA08A;
   --t-en: #5C7284;
   --t-wct: #CBFF04;
@@ -117,25 +115,40 @@ html.js body.is-ready .veil {
 
 /* ---------------- nav ---------------- */
 
-.nav {
-  position: fixed; top: 0; left: 0; right: 0; z-index: 50;
-  display: flex; justify-content: space-between; align-items: baseline;
-  padding: 1.35rem clamp(1.4rem, 4vw, 3rem);
-  mix-blend-mode: difference;
-  color: var(--cream);
-  pointer-events: none;
-}
-.nav a, .nav p { pointer-events: auto; }
+/* the bar itself has no box: each side is its own fixed layer, so the
+   wordmark's difference blend sees the page, not an isolated context */
+.nav { display: contents; }
 .nav__name {
-  font: italic 480 1.02rem/1 var(--f-display);
+  position: fixed; top: 1.3rem; left: clamp(1.4rem, 4vw, 3rem);
+  z-index: 50;
+  font-family: var(--f-display);
+  font-style: italic;
+  font-weight: 480;
+  font-size: 1.02rem;
+  line-height: 1;
   text-decoration: none;
   letter-spacing: .01em;
+  mix-blend-mode: difference;
+  color: var(--cream);
+  transform: translateZ(0);
 }
+/* the state label sits on a chip of the current register's own ground,
+   so the spine thread passes beneath it without striking through */
 .nav__state {
+  position: fixed; top: 1.45rem; right: clamp(1.4rem, 4vw, 3rem);
+  z-index: 50;
   font: 400 .58rem/1 var(--f-mono);
   letter-spacing: .3em;
-  opacity: .8;
+  color: var(--metal);
+  background: var(--ink);
+  padding: .55em 0 .55em .8em;
+  transition: color .5s ease, background .5s ease;
 }
+body[data-register="retinue"] .nav__state { color: #44534C; background: var(--g-retinue); }
+body[data-register="en"]      .nav__state { color: #37444E; background: var(--g-en); }
+body[data-register="wct"]     .nav__state { color: #000;    background: var(--g-wct); }
+body[data-register="sat"]     .nav__state { color: #0F0F0F; background: var(--g-sat); }
+body[data-register="attcu"]   .nav__state { color: #002FA7; background: var(--g-attcu); }
 #navState { transition: opacity .3s; }
 #navState.is-switching { opacity: 0; }
 
@@ -424,7 +437,7 @@ html.js .reveal.is-in { opacity: 1; transform: none; }
   right: var(--pad-x);
   font: 500 .58rem/1 "Geist", sans-serif;
   letter-spacing: .3em;
-  color: #7A8781;
+  color: #57655F;
 }
 .retinue-floats span:nth-child(1) { top: 16%; }
 .retinue-floats span:nth-child(2) { top: 42%; }
@@ -454,7 +467,7 @@ html.js .reveal.is-in { opacity: 1; transform: none; }
   margin: -0.4rem 0 1.6rem;
 }
 .specimen--en a { background: #F7F5F0; border-color: rgba(55, 68, 78, .22); }
-.weft--en .specimen__note { color: #37444E; opacity: .75; }
+.weft--en .specimen__note { color: #37444E; opacity: .92; }
 .weft--en .weft__exit a:hover { color: #37444E; }
 
 /* ---------------- WEFT III · we create tools ---------------- */
@@ -545,9 +558,12 @@ html.js .reveal.is-in { opacity: 1; transform: none; }
 
 .sat-strip {
   position: relative;
-  overflow: hidden;
+  overflow-x: auto;
   padding: 1.6rem 0 2.2rem;
-  touch-action: pan-y;
+}
+/* the custom drag engine only takes over with JS on a fine pointer */
+@media (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  html.js .sat-strip { overflow: hidden; touch-action: pan-y; }
 }
 .sat-strip__track {
   display: flex;
@@ -568,7 +584,7 @@ html.js .reveal.is-in { opacity: 1; transform: none; }
   letter-spacing: .12em;
   text-transform: uppercase;
   margin-top: .8rem;
-  opacity: .5;
+  opacity: .68;
 }
 .sat-item--plate {
   display: grid; place-items: center;
@@ -586,7 +602,7 @@ html.js .reveal.is-in { opacity: 1; transform: none; }
   letter-spacing: .04em;
 }
 .sat-item--tomato { background: var(--t-sat); }
-.sat-item--tomato .sat-plate { color: #F9F9F9; }
+.sat-item--tomato .sat-plate { color: #1A120E; }
 
 .sat-cursor {
   position: absolute; z-index: 5;
@@ -610,7 +626,7 @@ html.js .reveal.is-in { opacity: 1; transform: none; }
   html.js .sat-strip { cursor: none; }
 }
 @media (pointer: coarse), (prefers-reduced-motion: reduce) {
-  .sat-strip { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .sat-strip { -webkit-overflow-scrolling: touch; }
   .sat-cursor { display: none; }
 }
 
@@ -671,8 +687,10 @@ html.js .reveal.is-in { opacity: 1; transform: none; }
 .specimen--attcu::after { top: -16px; right: -16px; border-bottom-width: 1px; border-left-width: 1px; }
 .specimen--attcu a::before { bottom: -16px; left: -16px; border-top-width: 1px; border-right-width: 1px; }
 .specimen--attcu a::after { bottom: -16px; right: -16px; border-top-width: 1px; border-left-width: 1px; }
+/* plates are pressed, not lifted: keep the registration frame intact */
+.specimen--attcu a:hover { transform: none; box-shadow: 0 14px 34px -20px rgba(20, 16, 8, .3); }
 .weft--attcu .weft__exit a:hover { color: #FF48B4; }
-.weft--attcu .weft__mark { opacity: .68; color: #002FA7; }
+.weft--attcu .weft__mark { opacity: .9; color: #002FA7; }
 
 /* ---------------- coda · the selvedge ---------------- */
 
@@ -727,7 +745,7 @@ html.js .reveal.is-in { opacity: 1; transform: none; }
   display: flex; flex-wrap: wrap;
   gap: 1.1rem 2.4rem;
   justify-content: center;
-  width: min(1100px, 94vw);
+  width: min(880px, 94vw);
   margin-top: clamp(3rem, 8vh, 5.5rem);
   padding: 2.6rem 1rem;
   border-top: 1px solid rgba(243, 239, 231, .12);
@@ -753,7 +771,7 @@ html.js .reveal.is-in { opacity: 1; transform: none; }
 .coda__foot p {
   font: 400 .58rem/1.8 var(--f-mono);
   letter-spacing: .18em;
-  color: rgba(184, 178, 166, .55);
+  color: rgba(184, 178, 166, .8);
 }
 
 /* ---------------- responsive ---------------- */
