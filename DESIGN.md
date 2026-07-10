@@ -95,6 +95,23 @@ invisible; prices never appear on this surface), no triumph arc.
 - Test the final frame at SHORT viewports (~650px), not just 900px.
 - Capability-gate pointer effects (hover/pointer media queries), never touch-sniff.
 
+## Build log, 10/07/2026
+
+- Recon: all five live sites captured by headless Chrome (palettes, faces, idioms
+  extracted); screenshots became the specimen images.
+- Pass 1: full multi-viewport screenshot sweep (1440/1280x660/390). Fixes: thread
+  rendering softened away from neon, mobile kicker, spine geometry (deep manifesto
+  entry, smooth bulge runs, selvedge label clearance).
+- Pass 2: per-brand idiom deepening (viewfinder corners + floating labels, EN caps
+  line, SAT (R) + ( DRAG ), crop marks, WCT pill), basting-stitch seams, scripted
+  interaction tests (drag, hovers, riso jitter, network wake), reduced-motion and
+  no-JS verification, thread dive on scroll.
+- Pass 3: independent adversarial review, 23 findings. All P0/P1 fixed (last-element
+  reveal, shuttle persistence, nav/spine collisions via register-ground chip and
+  own-layer blend, SAT strip keyboard + no-JS reach, AA contrast) and most P2
+  (dye gradients at every seam, fonts.ready rebuild, DPR trail, ffi ligature
+  clusters, ARIA, copy unification, dead code and font pruning).
+
 ## Tech
 
 - Pure static: one `index.html`, vanilla JS + vendored `three.module.min.js` (r180).
