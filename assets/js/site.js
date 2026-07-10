@@ -158,7 +158,7 @@ function buildSpine() {
     const x = narrow ? L : L + 4;
     const entry = man.top + Math.max(200, (man.bot - man.top) * 0.24);
     const drop = 64;
-    const d = `M ${fmt(W / 2)},0 L ${fmt(W / 2)},${drop} ${cross(W / 2, drop, x, entry)} L ${fmt(x)},${fmt(man.bot - inset(man))}`;
+    const d = `M ${fmt(W / 2)},-30 L ${fmt(W / 2)},${drop} ${cross(W / 2, drop, x, entry)} L ${fmt(x)},${fmt(man.bot - inset(man))}`;
     leg([addPath(d, 'rgba(243,239,231,.55)', 1.5)], 0, man.bot - inset(man));
   }
 
