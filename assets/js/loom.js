@@ -18,7 +18,7 @@ const THREADS = [
 ];
 
 const VERT = `
-  uniform float uTime, uPhase, uAmp, uFreq, uSpeed, uLen;
+  uniform float uTime, uPhase, uAmp, uFreq, uSpeed, uLen, uScroll;
   uniform vec2 uMouse;
   varying float vT;
   void main() {
@@ -33,6 +33,8 @@ const VERT = `
     y *= mix(0.22, 1.0, env);
     float d = p.x - uMouse.x;
     y += exp(-d * d * 0.32) * uMouse.y * env;
+    /* scrolling pulls the threads down through the fabric */
+    y -= uScroll * uScroll * (2.6 + uAmp) * env;
     p.y += y;
     p.z += z;
     gl_Position = projectionMatrix * modelViewMatrix * vec4(p, 1.0);
@@ -70,6 +72,7 @@ function makeThread(t) {
         uFreq: { value: t.freq },
         uSpeed: { value: t.speed },
         uLen: { value: LEN },
+        uScroll: { value: 0 },
         uMouse: { value: new THREE.Vector2(0, 0) },
         uColor: { value: new THREE.Color(t.color) },
         uOpacity: { value: op },
@@ -119,8 +122,10 @@ function init() {
 }
 
 function setTime(v) {
+  const sc = Math.min(scrollY / Math.max(innerHeight, 1), 1);
   for (const m of meshes) {
     m.material.uniforms.uTime.value = v;
+    m.material.uniforms.uScroll.value = sc;
     m.material.uniforms.uMouse.value.set(mouse.x, mouse.y);
   }
 }
