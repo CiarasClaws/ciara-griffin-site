@@ -250,19 +250,7 @@ html.js body.is-ready .hero__line span { transform: translateY(0); }
 }
 /* when the name is woven into the canvas, the DOM glyphs go transparent
    but keep layout, selection and accessibility */
-.hero--woven .hero__name .hero__line span { color: rgba(243, 239, 231, .13); transition: none; }
-.hero__hint {
-  display: none;
-  font: 400 .52rem/1 var(--f-mono);
-  letter-spacing: .26em;
-  color: rgba(184, 178, 166, .55);
-  margin-top: 1.2rem;
-}
-@media (hover: hover) and (prefers-reduced-motion: no-preference) {
-  html.js .hero--woven ~ * .hero__hint { display: block; }
-  html.js .hero__hint { display: block; opacity: 0; transition: opacity 1.4s ease 2.4s; }
-  html.js body.is-ready .hero__hint { opacity: 1; }
-}
+.hero--woven .hero__name .hero__line span { color: transparent; transition: none; }
 html.js .hero__whisper, html.js .hero__kicker {
   opacity: 0; transition: opacity 1.4s ease 1s;
 }
