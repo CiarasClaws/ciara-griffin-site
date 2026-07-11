@@ -1,177 +1,257 @@
-/* THE LOOM — the threads are made of language.
-   Flowing lines of poetry and code weave across the void behind the name.
-   Waves of magnification travel along each thread so you can read what it
-   is spun from. Move the cursor near a thread and it bends away while its
-   letters and numbers swell. Her brand colours, WCT's lime and magenta
-   leading. Pure 2D canvas, no frameworks. */
+/* THE LOOM — six yarns weaving through the name.
+   The wordmark is a plane inside the scene; every thread's depth
+   oscillates across it, so thread passes over and under the
+   letterforms the way weft passes over and under warp.
+   Matte fibre shading, no glow. All code-drawn. */
+
+import * as THREE from 'three';
 
 const canvas = document.getElementById('loom');
+const hero = document.querySelector('.hero');
+const heroName = document.querySelector('.hero__name');
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
-const ctx = canvas && canvas.getContext('2d');
 
-const POETRY = 'MADE Future X, "Helvetica Neue", sans-serif';
-const CODE = 'JetBrains Mono, monospace';
+const LEN = 26;
 
-/* brand palette from the live sites; WCT lime + magenta lead */
+/* luminous brand hues; the warp runs as one strand among equals */
 const THREADS = [
-  { y: 0.12, color: '#FF48B4', text: 'for (const thread of self) weave(identity)', font: CODE, weight: 400, size: 15, amp: 0.9, freq: 1.5, speed: 0.16, flow: 10, wave: 0.055, alpha: 0.9 },
-  { y: 0.21, color: '#2E7665', text: 'text and textile come down from the same root', font: POETRY, weight: 400, size: 17, amp: 1.1, freq: 1.2, speed: 0.13, flow: 8, wave: 0.05, alpha: 0.92 },
-  { y: 0.30, color: '#E33294', text: 'we create tools and then they create us', font: POETRY, weight: 500, size: 22, amp: 1.35, freq: 1.05, speed: 0.11, flow: 7, wave: 0.05, alpha: 1 },
-  { y: 0.40, color: '#CBFF04', text: 'const loom = new Loom({ warp: 1, weft: 5 })', font: CODE, weight: 400, size: 19, amp: 1.15, freq: 1.35, speed: 0.15, flow: 9, wave: 0.06, alpha: 1 },
-  { y: 0.50, color: '#F3EFE7', text: 'warp of one and weft of five', font: POETRY, weight: 400, size: 16, amp: 0.8, freq: 1.1, speed: 0.1, flow: 6, wave: 0.045, alpha: 0.5 },
-  { y: 0.60, color: '#CBFF04', text: 'a self is a thing you can hand instructions to', font: POETRY, weight: 500, size: 21, amp: 1.3, freq: 1.0, speed: 0.12, flow: 7.5, wave: 0.05, alpha: 1 },
-  { y: 0.70, color: '#1D49E5', text: 'while (becoming) { build(); repeat() }', font: CODE, weight: 400, size: 18, amp: 1.2, freq: 1.4, speed: 0.14, flow: 9, wave: 0.06, alpha: 0.95 },
-  { y: 0.80, color: '#E33294', text: 'the loom remembers the shape of the hand', font: POETRY, weight: 400, size: 18, amp: 1.05, freq: 1.15, speed: 0.12, flow: 7, wave: 0.05, alpha: 0.92 },
-  { y: 0.89, color: '#FF6C2F', text: 'export default function me() { return tools }', font: CODE, weight: 400, size: 15, amp: 0.9, freq: 1.55, speed: 0.17, flow: 10, wave: 0.055, alpha: 0.85 },
+  { color: '#F3EFE7', amp: 0.80, r: 0.032, speed: 0.18, phase: 0.0,  freq: 1.5,  z: 0.10,  zAmp: 0.6,  op: 0.72 }, // warp
+  { color: '#2E5BFF', amp: 1.15, r: 0.028, speed: 0.27, phase: 1.26, freq: 2.05, z: -0.16, zAmp: 0.85, op: 0.72 }, // attcu
+  { color: '#FF6347', amp: 1.30, r: 0.028, speed: 0.24, phase: 2.51, freq: 1.85, z: 0.22,  zAmp: 0.9,  op: 0.66 }, // sat
+  { color: '#5C7284', amp: 1.20, r: 0.028, speed: 0.22, phase: 3.77, freq: 2.2,  z: -0.26, zAmp: 0.8,  op: 0.66 }, // en
+  { color: '#6FA08A', amp: 1.00, r: 0.028, speed: 0.25, phase: 5.03, freq: 1.95, z: 0.18,  zAmp: 0.88, op: 0.66 }, // retinue
+  { color: '#CBFF04', amp: 0.95, r: 0.024, speed: 0.29, phase: 6.28, freq: 2.35, z: -0.1,  zAmp: 0.82, op: 0.52 }, // wct
 ];
 
-const SEP = '      ·      ';
-let w = 0, h = 0, dpr = 1, sizeScale = 1;
-let running = false, visible = true, ready = false;
-const mouse = { x: -9999, y: -9999, tx: -9999, ty: -9999, active: false };
-let t0 = null, scrollP = 0;
-
-function resize() {
-  if (!canvas) return;
-  w = canvas.clientWidth || innerWidth;
-  h = canvas.clientHeight || innerHeight;
-  dpr = Math.min(devicePixelRatio || 1, 2);
-  canvas.width = Math.round(w * dpr);
-  canvas.height = Math.round(h * dpr);
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  sizeScale = Math.max(0.62, Math.min(w / 1440, 1.25));
-  for (const th of THREADS) measure(th);
-}
-
-function measure(th) {
-  ctx.font = `${th.weight} ${th.size * sizeScale}px ${th.font}`;
-  const unit = th.text + SEP;
-  const chars = [];
-  let uw = 0;
-  for (const ch of unit) {
-    const adv = ctx.measureText(ch).width + 0.5;
-    chars.push({ ch, adv });
-    uw += adv;
+const VERT = `
+  uniform float uTime, uPhase, uAmp, uFreq, uSpeed, uLen, uScroll, uZBase, uZAmp;
+  uniform vec2 uMouse;
+  varying float vT;
+  void main() {
+    vec3 p = position;
+    float t = clamp(p.x / uLen + 0.5, 0.0, 1.0);
+    vT = t;
+    float w = uTime * uSpeed;
+    float y = sin(t * 6.2831 * uFreq + uPhase + w) * uAmp;
+    y += sin(t * 6.2831 * uFreq * 0.47 + uPhase * 1.7 - w * 0.6) * uAmp * 0.36;
+    /* the over-under: depth crosses the plane of the cloth (the name) */
+    float z = uZBase + cos(t * 6.2831 * uFreq * 0.9 + uPhase * 2.1 + w * 0.7) * uZAmp;
+    float env = smoothstep(0.0, 0.14, t) * smoothstep(1.0, 0.86, t);
+    y *= mix(0.24, 1.0, env);
+    float d = p.x - uMouse.x;
+    y += exp(-d * d * 0.32) * uMouse.y * env;
+    y -= uScroll * uScroll * (2.4 + uAmp) * env;
+    p.y += y;
+    p.z += z;
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(p, 1.0);
   }
-  th.chars = chars;
-  th.unitW = Math.max(uw, 1);
+`;
+
+const FRAG = `
+  uniform vec3 uColor;
+  uniform float uOpacity;
+  varying float vT;
+  void main() {
+    float edge = smoothstep(0.0, 0.05, vT) * smoothstep(1.0, 0.95, vT);
+    gl_FragColor = vec4(uColor, uOpacity * edge);
+  }
+`;
+
+let renderer, scene, camera, meshes = [], textMesh = null, textTex = null;
+let clock, running = false, visible = true, wovenReady = false;
+const mouse = { tx: 0, ty: 0, x: 0, y: 0 };
+
+function makeThread(t) {
+  const group = [];
+  /* luminous core + a soft halo around it */
+  for (const [radius, op, order] of [[t.r * 3.1, t.op * 0.09, 2], [t.r, t.op, 3]]) {
+    const geo = new THREE.CylinderGeometry(radius, radius, LEN, 8, 340, true);
+    geo.rotateZ(Math.PI / 2);
+    const mat = new THREE.ShaderMaterial({
+      vertexShader: VERT,
+      fragmentShader: FRAG,
+      transparent: true,
+      depthWrite: false,
+      depthTest: true,
+      blending: THREE.AdditiveBlending,
+      uniforms: {
+        uTime: { value: 0 },
+        uPhase: { value: t.phase },
+        uAmp: { value: t.amp },
+        uFreq: { value: t.freq },
+        uSpeed: { value: t.speed },
+        uLen: { value: LEN },
+        uScroll: { value: 0 },
+        uZBase: { value: t.z },
+        uZAmp: { value: t.zAmp },
+        uMouse: { value: new THREE.Vector2(0, 0) },
+        uColor: { value: new THREE.Color(t.color) },
+        uOpacity: { value: op },
+      },
+    });
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.renderOrder = order;
+    mesh.frustumCulled = false;
+    group.push(mesh);
+  }
+  return group;
 }
 
-function drawThread(th, time) {
-  const H = h;
-  const size = th.size * sizeScale;
-  const baseY = th.y * H + scrollP * scrollP * 120 * (0.4 + th.y);
-  ctx.font = `${th.weight} ${size}px ${th.font}`;
+/* ---- the name, woven into the scene ---- */
+
+function worldPerPixel() {
+  const h = canvas.clientHeight || innerHeight;
+  return (2 * Math.tan((camera.fov * Math.PI) / 360) * camera.position.z) / h;
+}
+
+function buildTextPlane() {
+  if (!heroName) return;
+  const lines = [...heroName.querySelectorAll('.hero__line')];
+  if (!lines.length) return;
+  const nameRect = heroName.getBoundingClientRect();
+  const canvasRect = canvas.getBoundingClientRect();
+  if (nameRect.width < 10) return;
+
+  const cs = getComputedStyle(heroName);
+  const dpr = Math.min(devicePixelRatio, 2);
+  const pad = 20;
+  const tex = document.createElement('canvas');
+  tex.width = Math.ceil((nameRect.width + pad * 2) * dpr);
+  tex.height = Math.ceil((nameRect.height + pad * 2) * dpr);
+  const ctx = tex.getContext('2d');
+  ctx.scale(dpr, dpr);
+  ctx.fillStyle = '#F3EFE7';
   ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
+  ctx.textBaseline = 'alphabetic';
+  ctx.font = `${cs.fontWeight} ${parseFloat(cs.fontSize)}px Fraunces, Georgia, serif`;
+  if ('letterSpacing' in ctx) ctx.letterSpacing = cs.letterSpacing;
 
-  const scroll = ((time * th.flow * sizeScale) % th.unitW + th.unitW) % th.unitW;
-  const wavePos = ((time * th.wave + th.y * 3.1) % 1) * (w + th.unitW) - th.unitW * 0.5;
-  const waveSig = w * 0.10 + 40;
+  for (const line of lines) {
+    const r = line.getBoundingClientRect();
+    /* draw each DOM line exactly where it sits, baseline ~82% of line box */
+    const cx = r.left - nameRect.left + pad + r.width / 2;
+    const by = r.top - nameRect.top + pad + r.height * 0.82;
+    ctx.fillText(line.textContent, cx, by);
+  }
 
-  const copies = Math.ceil((w + th.unitW) / th.unitW) + 1;
-  const mr = 150, mr2 = mr * mr;
+  const texture = new THREE.CanvasTexture(tex);
+  texture.anisotropy = 4;
+  texture.colorSpace = THREE.SRGBColorSpace;
 
-  for (let cpy = 0; cpy < copies; cpy++) {
-    let x = -scroll + cpy * th.unitW;
-    for (let i = 0; i < th.chars.length; i++) {
-      const g = th.chars[i];
-      const cx = x + g.adv / 2;
-      x += g.adv;
-      if (g.ch === ' ') continue;
-      if (cx < -30 || cx > w + 30) continue;
+  const wpp = worldPerPixel();
+  const w = tex.width / dpr * wpp;
+  const h = tex.height / dpr * wpp;
+  const cxPx = nameRect.left + nameRect.width / 2 - (canvasRect.left + canvasRect.width / 2);
+  const cyPx = nameRect.top + nameRect.height / 2 - (canvasRect.top + canvasRect.height / 2);
 
-      const ph = cx * (th.freq / 200) + th.speed * time * 6.2831;
-      let py = baseY + Math.sin(ph) * (th.amp * size);
-      const slope = Math.cos(ph) * (th.amp * size) * (th.freq / 200);
+  if (textMesh) {
+    scene.remove(textMesh);
+    textMesh.geometry.dispose();
+    textMesh.material.dispose();
+    if (textTex) textTex.dispose();
+  }
+  textTex = texture;
+  const mat = new THREE.MeshBasicMaterial({
+    map: texture,
+    transparent: true,
+    alphaTest: 0.32,
+    depthWrite: true,
+    depthTest: true,
+    toneMapped: false,
+  });
+  textMesh = new THREE.Mesh(new THREE.PlaneGeometry(w, h), mat);
+  textMesh.position.set(cxPx * wpp, -cyPx * wpp, 0);
+  textMesh.renderOrder = 1;
+  scene.add(textMesh);
 
-      const dwx = cx - wavePos;
-      let scale = 1 + 1.15 * Math.exp(-(dwx * dwx) / (2 * waveSig * waveSig));
-
-      let px = cx;
-      if (mouse.active) {
-        const mdx = px - mouse.x, mdy = py - mouse.y;
-        const md2 = mdx * mdx + mdy * mdy;
-        if (md2 < mr2 * 4) {
-          const infl = Math.exp(-md2 / (2 * mr2));
-          scale += 1.5 * infl;
-          const md = Math.sqrt(md2) || 1;
-          const push = 46 * infl;
-          px += (mdx / md) * push;
-          py += (mdy / md) * push;
-        }
-      }
-
-      const big = scale > 1.06;
-      ctx.save();
-      ctx.translate(px, py);
-      ctx.rotate(Math.atan(slope) * 0.5);
-      ctx.scale(scale, scale);
-      ctx.globalAlpha = Math.min(1, th.alpha * (big ? 1 : 0.82));
-      if (scale > 1.35) {
-        ctx.shadowColor = th.color;
-        ctx.shadowBlur = 10 * (scale - 1);
-      }
-      ctx.fillStyle = th.color;
-      ctx.fillText(g.ch, 0, 0);
-      ctx.restore();
-    }
+  if (!wovenReady) {
+    wovenReady = true;
+    hero.classList.add('hero--woven');
   }
 }
 
-function frame(now) {
+/* ---- scene ---- */
+
+function init() {
+  renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  scene = new THREE.Scene();
+  camera = new THREE.PerspectiveCamera(32, 1, 0.1, 100);
+  camera.position.set(0, 0, 15);
+  for (const t of THREADS) for (const m of makeThread(t)) { scene.add(m); meshes.push(m); }
+  clock = new THREE.Clock();
+  resize();
+  addEventListener('resize', resize);
+
+  const fontsReady = document.fonts ? document.fonts.ready : Promise.resolve();
+  fontsReady.then(() => {
+    /* fonts are in: weave the name into the cloth */
+    requestAnimationFrame(() => {
+      buildTextPlane();
+      if (reduced) { setTime(3.2); renderer.render(scene, camera); }
+    });
+  });
+
+  if (reduced) {
+    setTime(3.2);
+    renderer.render(scene, camera);
+    return;
+  }
+
+  addEventListener('pointermove', (e) => {
+    const nx = (e.clientX / innerWidth) * 2 - 1;
+    const halfW = Math.tan((camera.fov * Math.PI) / 360) * camera.position.z * camera.aspect;
+    mouse.tx = nx * halfW;
+    mouse.ty = (0.5 - e.clientY / innerHeight) * 1.4;
+  }, { passive: true });
+
+  new IntersectionObserver((entries) => {
+    visible = entries[0].isIntersecting;
+    if (visible && !running) loop();
+  }).observe(canvas);
+
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden && visible && !running) loop();
+  });
+
+  loop();
+}
+
+function setTime(v) {
+  const sc = Math.min(scrollY / Math.max(innerHeight, 1), 1);
+  for (const m of meshes) {
+    m.material.uniforms.uTime.value = v;
+    m.material.uniforms.uScroll.value = sc;
+    m.material.uniforms.uMouse.value.set(mouse.x, mouse.y);
+  }
+}
+
+function loop() {
   if (!visible || document.hidden) { running = false; return; }
   running = true;
-  if (t0 === null) t0 = now;
-  const time = (now - t0) / 1000;
-  mouse.x += (mouse.tx - mouse.x) * 0.2;
-  mouse.y += (mouse.ty - mouse.y) * 0.2;
-  scrollP = Math.min(scrollY / Math.max(innerHeight, 1), 1);
-  ctx.clearRect(0, 0, w, h);
-  for (const th of THREADS) drawThread(th, time);
-  requestAnimationFrame(frame);
+  mouse.x += (mouse.tx - mouse.x) * 0.06;
+  mouse.y += (mouse.ty - mouse.y) * 0.06;
+  const t = clock.getElapsedTime();
+  setTime(t);
+  camera.position.x = Math.sin(t * 0.05) * 0.32;
+  camera.position.y = Math.cos(t * 0.043) * 0.22;
+  camera.lookAt(0, 0, 0);
+  renderer.render(scene, camera);
+  requestAnimationFrame(loop);
 }
 
-function staticFrame() {
-  ctx.clearRect(0, 0, w, h);
-  for (const th of THREADS) drawThread(th, th.y * 6);
+let textRebuildTimer;
+function resize() {
+  const w = canvas.clientWidth || innerWidth;
+  const h = canvas.clientHeight || innerHeight;
+  renderer.setSize(w, h, false);
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+  clearTimeout(textRebuildTimer);
+  textRebuildTimer = setTimeout(() => {
+    if (wovenReady) buildTextPlane();
+    if (reduced) { setTime(3.2); renderer.render(scene, camera); }
+  }, 180);
 }
 
-function whenFontsReady() {
-  const need = ['16px "MADE Future X"', '16px "JetBrains Mono"'];
-  const load = document.fonts
-    ? Promise.all(need.map((f) => document.fonts.load(f).catch(() => {}))).then(() => document.fonts.ready)
-    : Promise.resolve();
-  load.then(() => {
-    ready = true;
-    resize();
-    if (reduced) staticFrame();
-    else if (!running) requestAnimationFrame(frame);
-  });
-}
-
-if (canvas && ctx) {
-  resize();
-  addEventListener('resize', () => { resize(); if (reduced && ready) staticFrame(); });
-
-  if (!reduced) {
-    addEventListener('pointermove', (e) => {
-      const r = canvas.getBoundingClientRect();
-      mouse.tx = e.clientX - r.left;
-      mouse.ty = e.clientY - r.top;
-      if (!mouse.active) { mouse.x = mouse.tx; mouse.y = mouse.ty; }
-      mouse.active = true;
-    }, { passive: true });
-    addEventListener('pointerleave', () => { mouse.active = false; });
-
-    new IntersectionObserver((es) => {
-      visible = es[0].isIntersecting;
-      if (visible && ready && !running) requestAnimationFrame(frame);
-    }).observe(canvas);
-    document.addEventListener('visibilitychange', () => {
-      if (!document.hidden && visible && ready && !running) requestAnimationFrame(frame);
-    });
-  }
-
-  whenFontsReady();
-}
+try { init(); } catch (e) { canvas.remove(); }

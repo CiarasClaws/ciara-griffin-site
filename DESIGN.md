@@ -126,18 +126,3 @@ Domain, when live: ciaragriffin.xyz (cited in the chrome; a loom has three axes)
 - No build step. Repo = deployable artifact, like the-retinue-site.
 - Quality floor: semantic headings, alt text, visible focus, AA contrast per register,
   responsive to 360px.
-
-
-## Round 7 (11/07/2026) — text threads + type reset
-
-The hero is rebuilt in 2D canvas: the threads are flowing lines of poetry
-(MADE Future X) and code (JetBrains Mono) in the brand palette pulled from
-the live sites, WCT lime (#CBFF04) and magenta (#E33294) leading, joined by
-ATTCU pink/electric/orange, Retinue teal, SAT green. Magnify waves travel
-each thread so the words are legible; the cursor bends threads away and
-swells nearby glyphs. The scroll spine is now a vertical column of stacked
-letters and numbers down the left margin, revealed on scroll, coloured by
-the brand ground it passes through, with the same cursor repel/enlarge.
-Type system reset to MADE Future X (display) + Space Grotesk (body) +
-JetBrains Mono (chrome/code), all from Kira’s own font library. Fraunces,
-Mireille and IBM Plex Serif all retired. Three.js removed entirely.
