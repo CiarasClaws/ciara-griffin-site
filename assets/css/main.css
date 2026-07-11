@@ -132,10 +132,31 @@ html.js body.is-ready .veil {
   color: var(--cream);
   transform: translateZ(0);
 }
-/* the state label sits on a chip of the current register's own ground,
-   so the spine thread passes beneath it without striking through */
+/* wayfinding: writing + about, always visible, blended like the name */
+.nav__links {
+  position: fixed; top: 1.55rem; right: clamp(1.4rem, 4vw, 3rem);
+  z-index: 50;
+  display: flex; gap: clamp(1.2rem, 2.4vw, 2rem);
+  mix-blend-mode: difference;
+  transform: translateZ(0);
+}
+.nav__links a {
+  font: 400 .6rem/1 var(--f-mono);
+  letter-spacing: .3em;
+  color: var(--cream);
+  text-decoration: none;
+  opacity: .85;
+  padding-bottom: .4em;
+  border-bottom: 1px solid transparent;
+  transition: opacity .3s, border-color .3s;
+}
+.nav__links a:hover { opacity: 1; border-color: var(--cream); }
+
+/* the state label reads as corner HUD at the foot of the viewport,
+   on a chip of the current register's own ground so the spine thread
+   passes beneath it without striking through */
 .nav__state {
-  position: fixed; top: 1.45rem; right: clamp(1.4rem, 4vw, 3rem);
+  position: fixed; bottom: 1.35rem; right: clamp(1.4rem, 4vw, 3rem);
   z-index: 50;
   font: 400 .58rem/1 var(--f-mono);
   letter-spacing: .3em;
