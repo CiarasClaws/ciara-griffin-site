@@ -13,42 +13,34 @@ const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 const LEN = 26;
 
-/* yarn-dyed versions of the brand hues: matte, not electric */
+/* luminous brand hues; the warp runs as one strand among equals */
 const THREADS = [
-  { color: '#E9E2D4', amp: 0.70, r: 0.055, speed: 0.16, phase: 0.0,  freq: 1.45, z: 0.10,  zAmp: 0.55, op: 0.97 }, // warp
-  { color: '#4C67D6', amp: 1.05, r: 0.034, speed: 0.22, phase: 1.26, freq: 2.05, z: -0.16, zAmp: 0.85, op: 0.95 }, // attcu
-  { color: '#E8604A', amp: 1.25, r: 0.034, speed: 0.20, phase: 2.51, freq: 1.85, z: 0.22,  zAmp: 0.9,  op: 0.95 }, // sat
-  { color: '#718598', amp: 1.15, r: 0.034, speed: 0.18, phase: 3.77, freq: 2.2,  z: -0.26, zAmp: 0.8,  op: 0.92 }, // en
-  { color: '#7FA48E', amp: 0.95, r: 0.034, speed: 0.21, phase: 5.03, freq: 1.95, z: 0.18,  zAmp: 0.88, op: 0.93 }, // retinue
-  { color: '#B9D247', amp: 0.85, r: 0.031, speed: 0.24, phase: 6.28, freq: 2.35, z: -0.1,  zAmp: 0.82, op: 0.9  }, // wct
+  { color: '#F3EFE7', amp: 0.80, r: 0.032, speed: 0.18, phase: 0.0,  freq: 1.5,  z: 0.10,  zAmp: 0.6,  op: 0.72 }, // warp
+  { color: '#2E5BFF', amp: 1.15, r: 0.028, speed: 0.27, phase: 1.26, freq: 2.05, z: -0.16, zAmp: 0.85, op: 0.72 }, // attcu
+  { color: '#FF6347', amp: 1.30, r: 0.028, speed: 0.24, phase: 2.51, freq: 1.85, z: 0.22,  zAmp: 0.9,  op: 0.66 }, // sat
+  { color: '#5C7284', amp: 1.20, r: 0.028, speed: 0.22, phase: 3.77, freq: 2.2,  z: -0.26, zAmp: 0.8,  op: 0.66 }, // en
+  { color: '#6FA08A', amp: 1.00, r: 0.028, speed: 0.25, phase: 5.03, freq: 1.95, z: 0.18,  zAmp: 0.88, op: 0.66 }, // retinue
+  { color: '#CBFF04', amp: 0.95, r: 0.024, speed: 0.29, phase: 6.28, freq: 2.35, z: -0.1,  zAmp: 0.82, op: 0.52 }, // wct
 ];
 
 const VERT = `
   uniform float uTime, uPhase, uAmp, uFreq, uSpeed, uLen, uScroll, uZBase, uZAmp;
   uniform vec2 uMouse;
   varying float vT;
-  varying float vAng;
-  varying float vX;
   void main() {
     vec3 p = position;
     float t = clamp(p.x / uLen + 0.5, 0.0, 1.0);
     vT = t;
-    vAng = atan(p.z, p.y);
     float w = uTime * uSpeed;
-    /* slubs: yarn is never perfectly even */
-    float slub = 1.0 + 0.09 * sin(p.x * 3.4 + uPhase * 7.0) * sin(p.x * 1.7 - uPhase * 3.0);
-    p.y *= slub;
-    p.z *= slub;
     float y = sin(t * 6.2831 * uFreq + uPhase + w) * uAmp;
-    y += sin(t * 6.2831 * uFreq * 0.47 + uPhase * 1.7 - w * 0.6) * uAmp * 0.34;
+    y += sin(t * 6.2831 * uFreq * 0.47 + uPhase * 1.7 - w * 0.6) * uAmp * 0.36;
     /* the over-under: depth crosses the plane of the cloth (the name) */
     float z = uZBase + cos(t * 6.2831 * uFreq * 0.9 + uPhase * 2.1 + w * 0.7) * uZAmp;
     float env = smoothstep(0.0, 0.14, t) * smoothstep(1.0, 0.86, t);
-    y *= mix(0.28, 1.0, env);
+    y *= mix(0.24, 1.0, env);
     float d = p.x - uMouse.x;
-    y += exp(-d * d * 0.32) * uMouse.y * env * 0.8;
+    y += exp(-d * d * 0.32) * uMouse.y * env;
     y -= uScroll * uScroll * (2.4 + uAmp) * env;
-    vX = p.x;
     p.y += y;
     p.z += z;
     gl_Position = projectionMatrix * modelViewMatrix * vec4(p, 1.0);
@@ -57,19 +49,11 @@ const VERT = `
 
 const FRAG = `
   uniform vec3 uColor;
-  uniform float uOpacity, uPhase;
+  uniform float uOpacity;
   varying float vT;
-  varying float vAng;
-  varying float vX;
   void main() {
     float edge = smoothstep(0.0, 0.05, vT) * smoothstep(1.0, 0.95, vT);
-    /* matte rounding: one soft light from the upper left */
-    float light = 0.72 + 0.3 * cos(vAng - 2.3);
-    /* the ply: helical twist lines along the yarn */
-    float ply = sin(vX * 46.0 + vAng * 3.0 + uPhase * 5.0);
-    float twist = 1.0 - 0.16 * smoothstep(0.1, 0.9, ply * ply);
-    vec3 col = uColor * light * twist;
-    gl_FragColor = vec4(col, uOpacity * edge);
+    gl_FragColor = vec4(uColor, uOpacity * edge);
   }
 `;
 
@@ -79,8 +63,8 @@ const mouse = { tx: 0, ty: 0, x: 0, y: 0 };
 
 function makeThread(t) {
   const group = [];
-  /* core yarn + a soft fibre fuzz around it */
-  for (const [radius, op, order] of [[t.r * 2.6, t.op * 0.1, 2], [t.r, t.op, 3]]) {
+  /* luminous core + a soft halo around it */
+  for (const [radius, op, order] of [[t.r * 3.1, t.op * 0.09, 2], [t.r, t.op, 3]]) {
     const geo = new THREE.CylinderGeometry(radius, radius, LEN, 8, 340, true);
     geo.rotateZ(Math.PI / 2);
     const mat = new THREE.ShaderMaterial({
@@ -89,7 +73,7 @@ function makeThread(t) {
       transparent: true,
       depthWrite: false,
       depthTest: true,
-      blending: THREE.NormalBlending,
+      blending: THREE.AdditiveBlending,
       uniforms: {
         uTime: { value: 0 },
         uPhase: { value: t.phase },
