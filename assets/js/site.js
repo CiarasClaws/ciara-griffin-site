@@ -82,209 +82,230 @@ function ready() {
 }
 Promise.race([document.fonts ? document.fonts.ready : Promise.resolve(), new Promise((r) => setTimeout(r, 1400))]).then(ready);
 
-/* ---------------- the spine — a vertical thread of poetry and code ---------------- */
+/* ---------------- the spine ---------------- */
 
 const fabric = $('.fabric');
-const oldSpine = $('.spine');
-if (oldSpine) oldSpine.remove();
+const spine = $('.spine');
+let legs = [];
 
-const SPINE_STREAM = (
-  'we create tools and then they create us / for (t of self) weave(t); ' +
-  'text and textile share a single root / const loom = new Loom(6); ' +
-  'a self is a thing you can hand instructions to / while (becoming) build(); ' +
-  'warp of one and weft of five / if (frayed) repair(self); ' +
-  'building your way out one system at a time / return me; 0x1801 // '
-);
-const SPINE_CHARS = SPINE_STREAM.replace(/\s+/g, ' ').split('');
-
-/* each glyph takes the colour of the brand ground it is passing through */
-const SPINE_SECTIONS = [
-  { id: '#manifesto',               color: '#F3EFE7' },
-  { id: '#and-then-they-create-us', color: '#002FA7' },
-  { id: '#sometimes-aesthetic',     color: '#0F0F0F' },
-  { id: '#epistemic-net',           color: '#37444E' },
-  { id: '#the-retinue',             color: '#2E7665' },
-  { id: '#we-create-tools',         color: '#111111', accent: '#CBFF04' },
-  { id: '#writing',                 color: '#F3EFE7' },
-  { id: '#selvedge',                color: '#F3EFE7' },
-];
-
-let spineCanvas, sctx, spineGlyphs = [], spineHeight = 0, spineRunning = false, spineVisible = false;
-const spineMouse = { x: -9999, y: -9999, active: false };
-
-function catmull(p0, p1, p2, p3, t) {
-  const t2 = t * t, t3 = t2 * t;
-  return [
-    0.5 * ((2 * p1[0]) + (-p0[0] + p2[0]) * t + (2 * p0[0] - 5 * p1[0] + 4 * p2[0] - p3[0]) * t2 + (-p0[0] + 3 * p1[0] - 3 * p2[0] + p3[0]) * t3),
-    0.5 * ((2 * p1[1]) + (-p0[1] + p2[1]) * t + (2 * p0[1] - 5 * p1[1] + 4 * p2[1] - p3[1]) * t2 + (-p0[1] + 3 * p1[1] - 3 * p2[1] + p3[1]) * t3),
-  ];
-}
+const fmt = (n) => Math.round(n * 10) / 10;
 
 function buildSpine() {
-  if (!fabric) return;
-  if (!spineCanvas) {
-    spineCanvas = document.createElement('canvas');
-    spineCanvas.className = 'spine-canvas';
-    spineCanvas.setAttribute('aria-hidden', 'true');
-    document.body.appendChild(spineCanvas);
-    sctx = spineCanvas.getContext('2d');
-  }
+  if (!fabric || !spine) return;
+  spine.innerHTML = '';
+  legs = [];
+
   const W = fabric.clientWidth;
+  const H = fabric.scrollHeight;
+  spine.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  spine.setAttribute('width', W);
+  spine.setAttribute('height', H);
+
   const narrow = W < 640;
-  const off = narrow ? 18 : Math.max(30, Math.min(W * 0.05, 72));
-  const L = off, R = W - off, C = W / 2;
-  const fabricTop = fabric.getBoundingClientRect().top + scrollY;
+  const off = narrow ? 14 : Math.max(26, Math.min(W * 0.045, 64));
+  const L = off, R = W - off;
 
-  const absTop = (id) => $(id).getBoundingClientRect().top + scrollY;
-  const relTop = (id) => absTop(id) - fabricTop;
-  const relMid = (id) => { const r = $(id).getBoundingClientRect(); return r.top + scrollY - fabricTop + r.height / 2; };
+  const sec = (id) => {
+    const el = $(id);
+    return { top: el.offsetTop, bot: el.offsetTop + el.offsetHeight, el };
+  };
+  const man = sec('#manifesto');
+  const attcu = sec('#and-then-they-create-us');
+  const sat = sec('#sometimes-aesthetic');
+  const en = sec('#epistemic-net');
+  const ret = sec('#the-retinue');
+  const wct = sec('#we-create-tools');
+  const book = sec('#writing');
+  const coda = sec('#selvedge');
+  const braidEl = $('.coda__braid');
+  const braidY = coda.top + braidEl.offsetTop + 8;
 
-  const coda = $('#selvedge'), braidEl = $('.coda__braid');
-  const braidTop = (coda.getBoundingClientRect().top + scrollY - fabricTop) + braidEl.offsetTop + 10;
+  const inset = (s) => Math.min(130, (s.bot - s.top) * 0.14);
 
-  /* the thread hugs the left margin the whole descent (gentle drift only),
-     so its stacked letters never cross the centred content; it converges
-     to the middle just before the braid */
-  const drift = narrow ? 22 : 66;
-  const wp = [
-    [C, -40],
-    [L, relTop('#manifesto') + 150],
-    [L + drift, relMid('#and-then-they-create-us')],
-    [L, relMid('#sometimes-aesthetic')],
-    [L + drift, relMid('#epistemic-net')],
-    [L, relMid('#the-retinue')],
-    [L + drift, relMid('#we-create-tools')],
-    [L, relMid('#writing')],
-    [L + drift * 0.5, relTop('#selvedge') + 40],
-    [C, braidTop],
-  ];
-
-  const poly = [];
-  for (let i = 0; i < wp.length - 1; i++) {
-    const p0 = wp[Math.max(0, i - 1)], p1 = wp[i], p2 = wp[i + 1], p3 = wp[Math.min(wp.length - 1, i + 2)];
-    const steps = 26;
-    for (let s = 0; s < steps; s++) poly.push(catmull(p0, p1, p2, p3, s / steps));
-  }
-  poly.push(wp[wp.length - 1]);
-  spineHeight = poly[poly.length - 1][1];
-
-  /* resample the polyline by arc length, one glyph per STEP px */
-  const STEP = narrow ? 21 : 25;
-  const pts = [];
-  let carry = 0;
-  for (let i = 1; i < poly.length; i++) {
-    const [ax, ay] = poly[i - 1], [bx, by] = poly[i];
-    const seg = Math.hypot(bx - ax, by - ay) || 0.001;
-    let d = carry;
-    while (d < seg) { const tt = d / seg; pts.push([ax + (bx - ax) * tt, ay + (by - ay) * tt]); d += STEP; }
-    carry = d - seg;
-  }
-
-  const colorAt = (yRel) => {
-    const pageY = fabricTop + yRel;
-    for (let k = SPINE_SECTIONS.length - 1; k >= 0; k--) {
-      if (pageY >= absTop(SPINE_SECTIONS[k].id) - 2) return SPINE_SECTIONS[k];
+  const NS = 'http://www.w3.org/2000/svg';
+  const defs = document.createElementNS(NS, 'defs');
+  spine.appendChild(defs);
+  let gradN = 0;
+  /* the thread dips into the next section's dye as it crosses the seam */
+  function dyeGradient(from, to, y1, y2, fromOp = 1, toOp = 1) {
+    const g = document.createElementNS(NS, 'linearGradient');
+    g.id = `dye${gradN++}`;
+    g.setAttribute('gradientUnits', 'userSpaceOnUse');
+    g.setAttribute('x1', 0); g.setAttribute('x2', 0);
+    g.setAttribute('y1', y1); g.setAttribute('y2', y2);
+    for (const [off, col, op] of [[0, from, fromOp], [1, to, toOp]]) {
+      const s = document.createElementNS(NS, 'stop');
+      s.setAttribute('offset', off);
+      s.setAttribute('stop-color', col);
+      s.setAttribute('stop-opacity', op);
+      g.appendChild(s);
     }
-    return SPINE_SECTIONS[0];
+    defs.appendChild(g);
+    return `url(#${g.id})`;
+  }
+  function addPath(d, stroke, width, extra = {}) {
+    const p = document.createElementNS(NS, 'path');
+    p.setAttribute('d', d);
+    p.setAttribute('stroke', stroke);
+    p.setAttribute('stroke-width', width);
+    if (extra.opacity) p.setAttribute('opacity', extra.opacity);
+    if (extra.transform) p.setAttribute('transform', extra.transform);
+    spine.appendChild(p);
+    return p;
+  }
+  function addNode(x, y, fill) {
+    const c = document.createElementNS(NS, 'circle');
+    c.setAttribute('cx', x); c.setAttribute('cy', y); c.setAttribute('r', 2.6);
+    c.setAttribute('fill', fill);
+    c.dataset.y = y;
+    c.style.opacity = 0;
+    c.style.transition = 'opacity .5s ease';
+    spine.appendChild(c);
+    return c;
+  }
+  const cross = (x0, y0, x1, y1) => {
+    const g = (y1 - y0) * 0.55;
+    return `C ${fmt(x0)},${fmt(y0 + g)} ${fmt(x1)},${fmt(y1 - g)} ${fmt(x1)},${fmt(y1)}`;
+  };
+  function leg(paths, y0, y1, nodes = []) { legs.push({ paths, y0, y1, nodes }); }
+
+  /* smooth in-section run with one lateral bulge, vertical tangents both ends */
+  const bulgeRun = (x, y0, y1, bx) => {
+    const my = (y0 + y1) / 2, dy = y1 - y0;
+    return ` C ${fmt(x)},${fmt(y0 + dy * 0.35)} ${fmt(x - bx)},${fmt(my - dy * 0.12)} ${fmt(x - bx)},${fmt(my)}`
+      + ` C ${fmt(x - bx)},${fmt(my + dy * 0.12)} ${fmt(x)},${fmt(y1 - dy * 0.35)} ${fmt(x)},${fmt(y1)}`;
   };
 
-  spineGlyphs = pts.map((pt, i) => {
-    const sec = colorAt(pt[1]);
-    const color = (sec.accent && i % 6 === 0) ? sec.accent : sec.color;
-    return { x: pt[0], pageY: fabricTop + pt[1], ch: SPINE_CHARS[i % SPINE_CHARS.length], color };
-  });
-
-  sizeSpineCanvas();
-  if (reduced) drawSpineStatic();
-  else if (!spineRunning) { spineVisible = true; requestAnimationFrame(drawSpine); }
-}
-
-function sizeSpineCanvas() {
-  if (!spineCanvas) return;
-  const dpr = Math.min(devicePixelRatio || 1, 2);
-  spineCanvas.width = Math.round(innerWidth * dpr);
-  spineCanvas.height = Math.round(innerHeight * dpr);
-  sctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-}
-
-function drawSpineStatic() {
-  if (!sctx) return;
-  sctx.clearRect(0, 0, innerWidth, innerHeight);
-  sctx.textAlign = 'center'; sctx.textBaseline = 'middle';
-  for (const g of spineGlyphs) {
-    const sy = g.pageY - scrollY;
-    if (sy < -30 || sy > innerHeight + 30) continue;
-    sctx.font = '15px "JetBrains Mono", monospace';
-    sctx.fillStyle = g.color;
-    sctx.globalAlpha = 0.92;
-    sctx.fillText(g.ch, g.x, sy);
+  /* 0 — straight drop from the hero cue, then into the manifesto margin, cream */
+  {
+    const x = narrow ? L : L + 4;
+    const entry = man.top + Math.max(200, (man.bot - man.top) * 0.24);
+    const drop = 64;
+    const d = `M ${fmt(W / 2)},-30 L ${fmt(W / 2)},${drop} ${cross(W / 2, drop, x, entry)} L ${fmt(x)},${fmt(man.bot - inset(man))}`;
+    leg([addPath(d, 'rgba(243,239,231,.55)', 1.5)], 0, man.bot - inset(man));
   }
-}
 
-function drawSpine() {
-  if (!spineVisible || document.hidden) { spineRunning = false; return; }
-  spineRunning = true;
-  if (!sctx) { requestAnimationFrame(drawSpine); return; }
-  const vw = innerWidth, vh = innerHeight;
-  sctx.clearRect(0, 0, vw, vh);
-  sctx.textAlign = 'center'; sctx.textBaseline = 'middle';
-  const tip = scrollY + vh * 0.66;
-  const time = performance.now() / 1000;
-  const fabricTop = fabric.getBoundingClientRect().top + scrollY;
-  const waveY = fabricTop + ((time * 150) % (spineHeight + 300));
+  /* I — IKB with a misregistered pink ghost. the press */
+  {
+    const e = inset(attcu);
+    const x = narrow ? L : R;
+    const px = narrow ? L : L + 4;
+    const y0 = attcu.top + e, y1 = attcu.bot - e;
+    const d = `M ${fmt(px)},${fmt(man.bot - inset(man))} ${cross(px, man.bot - inset(man), x, y0)}`
+      + bulgeRun(x, y0, y1, narrow ? 4 : 22);
+    const ghost = addPath(d, dyeGradient('#FF48B4', '#FF48B4', man.bot - inset(man), y0, 0, .65), 1.5, { transform: 'translate(2.5,-2)' });
+    const ink = addPath(d, dyeGradient('#F3EFE7', '#002FA7', man.bot - inset(man), y0, .55, .9), 1.5);
+    leg([ghost, ink], man.bot - inset(man), y1);
+  }
 
-  for (const g of spineGlyphs) {
-    if (g.pageY > tip) continue;
-    const sy = g.pageY - scrollY;
-    if (sy < -30 || sy > vh + 30) continue;
-    let sx = g.x, scale = 1;
+  /* II — right-angle mono routing, dead straight. the studio */
+  {
+    const e = inset(sat);
+    const x = narrow ? L : L;
+    const px = narrow ? L : R;
+    const y0 = sat.top + e, y1 = sat.bot - e;
+    const jogY = y0 - Math.min(60, inset(attcu));
+    const d = `M ${fmt(px)},${fmt(attcu.bot - inset(attcu))} L ${fmt(px)},${fmt(jogY)} L ${fmt(x)},${fmt(jogY)} L ${fmt(x)},${fmt(y1)}`;
+    const dye = dyeGradient('#002FA7', '#0F0F0F', attcu.bot - inset(attcu), y0, .9, .85);
+    leg([addPath(d, dye, 1.5)], attcu.bot - inset(attcu), y1);
+  }
 
-    const dwy = g.pageY - waveY;
-    scale += 0.7 * Math.exp(-(dwy * dwy) / (2 * 64 * 64));
-
-    if (spineMouse.active) {
-      const dx = sx - spineMouse.x, dy = sy - spineMouse.y;
-      const d2 = dx * dx + dy * dy;
-      if (d2 < 170 * 170) {
-        const infl = Math.exp(-d2 / (2 * 95 * 95));
-        scale += 1.7 * infl;
-        const d = Math.sqrt(d2) || 1;
-        sx += (dx / d) * 42 * infl;
-      }
+  /* III — hop node to node, the net */
+  {
+    const e = inset(en);
+    const x = narrow ? L : R;
+    const px = narrow ? L : L;
+    const y0 = en.top + e, y1 = en.bot - e;
+    const offs = narrow ? [0, -7, 5, -8, 0] : [0, -26, 18, -30, 0];
+    const fr = [0, 0.25, 0.5, 0.75, 1];
+    let d = `M ${fmt(px)},${fmt(sat.bot - inset(sat))} ${cross(px, sat.bot - inset(sat), x + offs[0], y0)}`;
+    const nodes = [];
+    for (let k = 1; k < fr.length; k++) {
+      const nx = x + offs[k], ny = y0 + (y1 - y0) * fr[k];
+      d += ` L ${fmt(nx)},${fmt(ny)}`;
+      if (k < fr.length - 1) nodes.push(addNode(nx, ny, '#37444E'));
     }
-
-    const fade = clamp((tip - g.pageY) / 70, 0, 1);
-    sctx.font = `${(15 * scale).toFixed(1)}px "JetBrains Mono", monospace`;
-    sctx.globalAlpha = fade * (scale > 1.1 ? 1 : 0.9);
-    if (scale > 1.4) { sctx.shadowColor = g.color; sctx.shadowBlur = 8 * (scale - 1); }
-    else { sctx.shadowBlur = 0; }
-    sctx.fillStyle = g.color;
-    sctx.fillText(g.ch, sx, sy);
+    const dye = dyeGradient('#0F0F0F', '#37444E', sat.bot - inset(sat), y0, .85, .8);
+    leg([addPath(d, dye, 1.5)], sat.bot - inset(sat), y1, nodes);
   }
-  requestAnimationFrame(drawSpine);
+
+  /* IV — cross back left, one slow curve. the retinue */
+  {
+    const e = inset(ret);
+    const x = narrow ? L : L;
+    const px = narrow ? L : R;
+    const d = `M ${fmt(px)},${fmt(en.bot - inset(en))} ${cross(px, en.bot - inset(en), x, ret.top + e)}`
+      + bulgeRun(x, ret.top + e, ret.bot - e, narrow ? -4 : -26);
+    const dye = dyeGradient('#37444E', '#3D544B', en.bot - inset(en), ret.top + e, .8, .8);
+    leg([addPath(d, dye, 1.5)], en.bot - inset(en), ret.bot - e);
+  }
+
+  /* V — zigzag stitch, lime over black. the toolshop */
+  {
+    const e = inset(wct);
+    const x = narrow ? L : R;
+    const px = narrow ? L : L;
+    const y0 = wct.top + e, y1 = wct.bot - e;
+    const amp = narrow ? 4 : 8;
+    let d = `M ${fmt(px)},${fmt(ret.bot - inset(ret))} ${cross(px, ret.bot - inset(ret), x, y0)}`;
+    const step = 26;
+    let k = 0;
+    for (let y = y0 + step; y < y1; y += step, k++) d += ` L ${fmt(x + (k % 2 ? -amp : amp))},${fmt(y)}`;
+    d += ` L ${fmt(x)},${fmt(y1)}`;
+    const under = addPath(d, dyeGradient('#3D544B', '#000', ret.bot - inset(ret), y0, .85, .9), 3);
+    const over = addPath(d, dyeGradient('#3D544B', '#CBFF04', ret.bot - inset(ret), y0, 0, 1), 1.5);
+    leg([under, over], ret.bot - inset(ret), y1);
+  }
+
+  /* VI — into the pattern book, cream again */
+  {
+    const e = inset(book);
+    const x = narrow ? L : L + 4;
+    const px = narrow ? L : R;
+    const y0 = book.top + e, y1 = book.bot - e;
+    const d = `M ${fmt(px)},${fmt(wct.bot - inset(wct))} ${cross(px, wct.bot - inset(wct), x, y0)} L ${fmt(x)},${fmt(y1)}`;
+    const dye = dyeGradient('#CBFF04', '#F3EFE7', wct.bot - inset(wct), y0, .9, .55);
+    leg([addPath(d, dye, 1.5)], wct.bot - inset(wct), y1);
+  }
+
+  /* VII — home, into the braid */
+  {
+    const px = narrow ? L : L + 4;
+    const d = `M ${fmt(px)},${fmt(book.bot - inset(book))} ${cross(px, book.bot - inset(book), W / 2, braidY)}`;
+    leg([addPath(d, 'rgba(243,239,231,.6)', 1.5)], book.bot - inset(book), braidY);
+  }
+
+  for (const l of legs) {
+    for (const p of l.paths) {
+      const len = p.getTotalLength();
+      p.dataset.len = len;
+      p.setAttribute('stroke-dasharray', len);
+      p.setAttribute('stroke-dashoffset', reduced ? 0 : len);
+    }
+    if (reduced) l.nodes.forEach((n) => { n.style.opacity = .75; });
+  }
+  updateSpine();
 }
 
-/* the spine loop is fed by scroll + its own rAF; keep this stub for onScroll */
-function updateSpine() {}
-
-if (fabric && !reduced) {
-  addEventListener('pointermove', (e) => { spineMouse.x = e.clientX; spineMouse.y = e.clientY; spineMouse.active = true; }, { passive: true });
-  document.documentElement.addEventListener('pointerleave', () => { spineMouse.active = false; });
-  new IntersectionObserver((es) => {
-    spineVisible = es[0].isIntersecting;
-    if (spineVisible && !spineRunning) requestAnimationFrame(drawSpine);
-  }, { rootMargin: '120px' }).observe(fabric);
-  document.addEventListener('visibilitychange', () => {
-    if (!document.hidden && spineVisible && !spineRunning) requestAnimationFrame(drawSpine);
-  });
-  addEventListener('resize', () => { sizeSpineCanvas(); });
+let fabricTop = 0;
+function updateSpine() {
+  if (reduced || !legs.length) return;
+  fabricTop = fabric.getBoundingClientRect().top + scrollY;
+  const tip = scrollY + innerHeight * 0.62 - fabricTop;
+  for (const l of legs) {
+    const p = clamp((tip - l.y0) / (l.y1 - l.y0), 0, 1);
+    for (const path of l.paths) {
+      path.setAttribute('stroke-dashoffset', (path.dataset.len * (1 - p)).toFixed(1));
+    }
+    for (const n of l.nodes) n.style.opacity = tip > +n.dataset.y ? .75 : 0;
+  }
 }
 
 /* ---------------- coda braid ---------------- */
 
 const braidCanvas = $('.braid');
 const coda = $('#selvedge');
-const BRAID_COLORS = ['#E33294', '#CBFF04', '#FF48B4', '#F3EFE7', '#1D49E5', '#2E7665'];
+const BRAID_COLORS = ['#4C67D6', '#E8604A', '#718598', '#F3EFE7', '#7FA48E', '#B9D247'];
 let braidCtx, braidW = 0, braidH = 0, lastBraidP = -1;
 
 function sizeBraid() {
