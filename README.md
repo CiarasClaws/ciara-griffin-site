@@ -3,9 +3,11 @@
 The master personal-brand site: the room where five ventures meet the person who
 makes them.
 
-Six threads weave through the name in a WebGL void (the wordmark is a plane
-inside the scene, so thread passes over and under the letterforms); a single
-unbroken thread then travels the whole page, passing through five sections that
+The hero threads are made of language: flowing lines of poetry and code in
+her brand colours (WCT lime and magenta leading), with waves of magnification
+travelling along them so you can read what each is spun from, and cursor
+repulsion that bends the thread and swells its letters. A single vertical
+thread of stacked letters and numbers then travels the whole page on scroll, passing through five sections that
 each shift the entire register into one of the real brands (And Then They Create
 Us, Sometimes Aesthetic, Epistemic Net, The Retinue, We Create Tools), through
 the pattern book, before all six threads braid together at the selvedge and
@@ -20,10 +22,10 @@ live sites, framed as specimens.
 
 ## Stack
 
-Pure static. Vanilla JS, vendored `three.module.min.js` (r180), self-hosted
-fonts (Fraunces, Fragment Mono, plus each brand's own face for its wordmark).
-Zero external requests at runtime. No build step; the repo is the deployable
-artifact.
+Pure static. Vanilla JS, 2D canvas (no frameworks), self-hosted fonts
+(MADE Future X display, Space Grotesk body, JetBrains Mono code, plus each
+brand's own face for its wordmark). Zero external requests at runtime. No build
+step; the repo is the deployable artifact.
 
 ## Serve
 
