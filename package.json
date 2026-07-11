@@ -1,0 +1,13 @@
+{
+  "name": "ciara-griffin-site",
+  "private": true,
+  "type": "module",
+  "description": "Ciara Griffin - The Loom. Master personal-brand site. Static, zero external requests.",
+  "scripts": {
+    "serve": "python3 -m http.server 8794 --bind 0.0.0.0",
+    "refresh-specimens": "node scripts/refresh-specimens.mjs"
+  },
+  "devDependencies": {
+    "puppeteer-core": "^24.0.0"
+  }
+}

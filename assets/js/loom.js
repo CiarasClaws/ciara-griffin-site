@@ -1,40 +1,54 @@
-/* THE LOOM — six threads weaving in the void behind the name.
-   One cream warp (hers), five brand wefts. All code-drawn. */
+/* THE LOOM — six yarns weaving through the name.
+   The wordmark is a plane inside the scene; every thread's depth
+   oscillates across it, so thread passes over and under the
+   letterforms the way weft passes over and under warp.
+   Matte fibre shading, no glow. All code-drawn. */
 
 import * as THREE from 'three';
 
 const canvas = document.getElementById('loom');
+const hero = document.querySelector('.hero');
+const heroName = document.querySelector('.hero__name');
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 const LEN = 26;
 
+/* yarn-dyed versions of the brand hues: matte, not electric */
 const THREADS = [
-  { color: '#F3EFE7', amp: 0.80, r: 0.044, speed: 0.20, phase: 0.0, freq: 1.5, z: 0.0,  op: 0.88 }, // warp
-  { color: '#6FA08A', amp: 1.10, r: 0.028, speed: 0.27, phase: 1.1, freq: 2.1, z: 0.7,  op: 0.66 }, // retinue
-  { color: '#5C7284', amp: 1.25, r: 0.028, speed: 0.24, phase: 2.3, freq: 1.8, z: -0.8, op: 0.66 }, // en
-  { color: '#CBFF04', amp: 1.00, r: 0.024, speed: 0.31, phase: 3.4, freq: 2.5, z: 1.4,  op: 0.52 }, // wct
-  { color: '#FF6347', amp: 1.30, r: 0.028, speed: 0.26, phase: 4.5, freq: 1.95, z: -1.5, op: 0.66 }, // sat
-  { color: '#2E5BFF', amp: 1.15, r: 0.028, speed: 0.29, phase: 5.6, freq: 2.3, z: 0.35, op: 0.72 }, // attcu
+  { color: '#E9E2D4', amp: 0.70, r: 0.055, speed: 0.16, phase: 0.0,  freq: 1.45, z: 0.10,  zAmp: 0.55, op: 0.97 }, // warp
+  { color: '#4C67D6', amp: 1.05, r: 0.034, speed: 0.22, phase: 1.26, freq: 2.05, z: -0.16, zAmp: 0.85, op: 0.95 }, // attcu
+  { color: '#E8604A', amp: 1.25, r: 0.034, speed: 0.20, phase: 2.51, freq: 1.85, z: 0.22,  zAmp: 0.9,  op: 0.95 }, // sat
+  { color: '#718598', amp: 1.15, r: 0.034, speed: 0.18, phase: 3.77, freq: 2.2,  z: -0.26, zAmp: 0.8,  op: 0.92 }, // en
+  { color: '#7FA48E', amp: 0.95, r: 0.034, speed: 0.21, phase: 5.03, freq: 1.95, z: 0.18,  zAmp: 0.88, op: 0.93 }, // retinue
+  { color: '#B9D247', amp: 0.85, r: 0.031, speed: 0.24, phase: 6.28, freq: 2.35, z: -0.1,  zAmp: 0.82, op: 0.9  }, // wct
 ];
 
 const VERT = `
-  uniform float uTime, uPhase, uAmp, uFreq, uSpeed, uLen, uScroll;
+  uniform float uTime, uPhase, uAmp, uFreq, uSpeed, uLen, uScroll, uZBase, uZAmp;
   uniform vec2 uMouse;
   varying float vT;
+  varying float vAng;
+  varying float vX;
   void main() {
     vec3 p = position;
     float t = clamp(p.x / uLen + 0.5, 0.0, 1.0);
     vT = t;
+    vAng = atan(p.z, p.y);
     float w = uTime * uSpeed;
+    /* slubs: yarn is never perfectly even */
+    float slub = 1.0 + 0.09 * sin(p.x * 3.4 + uPhase * 7.0) * sin(p.x * 1.7 - uPhase * 3.0);
+    p.y *= slub;
+    p.z *= slub;
     float y = sin(t * 6.2831 * uFreq + uPhase + w) * uAmp;
-    y += sin(t * 6.2831 * uFreq * 0.47 + uPhase * 1.7 - w * 0.6) * uAmp * 0.38;
-    float z = cos(t * 6.2831 * uFreq * 0.8 + uPhase * 2.1 + w * 0.8) * 0.9;
+    y += sin(t * 6.2831 * uFreq * 0.47 + uPhase * 1.7 - w * 0.6) * uAmp * 0.34;
+    /* the over-under: depth crosses the plane of the cloth (the name) */
+    float z = uZBase + cos(t * 6.2831 * uFreq * 0.9 + uPhase * 2.1 + w * 0.7) * uZAmp;
     float env = smoothstep(0.0, 0.14, t) * smoothstep(1.0, 0.86, t);
-    y *= mix(0.22, 1.0, env);
+    y *= mix(0.28, 1.0, env);
     float d = p.x - uMouse.x;
-    y += exp(-d * d * 0.32) * uMouse.y * env;
-    /* scrolling pulls the threads down through the fabric */
-    y -= uScroll * uScroll * (2.6 + uAmp) * env;
+    y += exp(-d * d * 0.32) * uMouse.y * env * 0.8;
+    y -= uScroll * uScroll * (2.4 + uAmp) * env;
+    vX = p.x;
     p.y += y;
     p.z += z;
     gl_Position = projectionMatrix * modelViewMatrix * vec4(p, 1.0);
@@ -43,28 +57,39 @@ const VERT = `
 
 const FRAG = `
   uniform vec3 uColor;
-  uniform float uOpacity;
+  uniform float uOpacity, uPhase;
   varying float vT;
+  varying float vAng;
+  varying float vX;
   void main() {
     float edge = smoothstep(0.0, 0.05, vT) * smoothstep(1.0, 0.95, vT);
-    gl_FragColor = vec4(uColor, uOpacity * edge);
+    /* matte rounding: one soft light from the upper left */
+    float light = 0.72 + 0.3 * cos(vAng - 2.3);
+    /* the ply: helical twist lines along the yarn */
+    float ply = sin(vX * 46.0 + vAng * 3.0 + uPhase * 5.0);
+    float twist = 1.0 - 0.16 * smoothstep(0.1, 0.9, ply * ply);
+    vec3 col = uColor * light * twist;
+    gl_FragColor = vec4(col, uOpacity * edge);
   }
 `;
 
-let renderer, scene, camera, meshes = [], clock, running = false, visible = true;
+let renderer, scene, camera, meshes = [], textMesh = null, textTex = null;
+let clock, running = false, visible = true, wovenReady = false;
 const mouse = { tx: 0, ty: 0, x: 0, y: 0 };
 
 function makeThread(t) {
   const group = [];
-  for (const [radius, op] of [[t.r, t.op], [t.r * 3.1, t.op * 0.09]]) {
-    const geo = new THREE.CylinderGeometry(radius, radius, LEN, 8, 300, true);
+  /* core yarn + a soft fibre fuzz around it */
+  for (const [radius, op, order] of [[t.r * 2.6, t.op * 0.1, 2], [t.r, t.op, 3]]) {
+    const geo = new THREE.CylinderGeometry(radius, radius, LEN, 8, 340, true);
     geo.rotateZ(Math.PI / 2);
     const mat = new THREE.ShaderMaterial({
       vertexShader: VERT,
       fragmentShader: FRAG,
       transparent: true,
       depthWrite: false,
-      blending: THREE.AdditiveBlending,
+      depthTest: true,
+      blending: THREE.NormalBlending,
       uniforms: {
         uTime: { value: 0 },
         uPhase: { value: t.phase },
@@ -73,17 +98,95 @@ function makeThread(t) {
         uSpeed: { value: t.speed },
         uLen: { value: LEN },
         uScroll: { value: 0 },
+        uZBase: { value: t.z },
+        uZAmp: { value: t.zAmp },
         uMouse: { value: new THREE.Vector2(0, 0) },
         uColor: { value: new THREE.Color(t.color) },
         uOpacity: { value: op },
       },
     });
     const mesh = new THREE.Mesh(geo, mat);
-    mesh.position.z = t.z;
+    mesh.renderOrder = order;
+    mesh.frustumCulled = false;
     group.push(mesh);
   }
   return group;
 }
+
+/* ---- the name, woven into the scene ---- */
+
+function worldPerPixel() {
+  const h = canvas.clientHeight || innerHeight;
+  return (2 * Math.tan((camera.fov * Math.PI) / 360) * camera.position.z) / h;
+}
+
+function buildTextPlane() {
+  if (!heroName) return;
+  const lines = [...heroName.querySelectorAll('.hero__line')];
+  if (!lines.length) return;
+  const nameRect = heroName.getBoundingClientRect();
+  const canvasRect = canvas.getBoundingClientRect();
+  if (nameRect.width < 10) return;
+
+  const cs = getComputedStyle(heroName);
+  const dpr = Math.min(devicePixelRatio, 2);
+  const pad = 20;
+  const tex = document.createElement('canvas');
+  tex.width = Math.ceil((nameRect.width + pad * 2) * dpr);
+  tex.height = Math.ceil((nameRect.height + pad * 2) * dpr);
+  const ctx = tex.getContext('2d');
+  ctx.scale(dpr, dpr);
+  ctx.fillStyle = '#F3EFE7';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'alphabetic';
+  ctx.font = `${cs.fontWeight} ${parseFloat(cs.fontSize)}px Fraunces, Georgia, serif`;
+  if ('letterSpacing' in ctx) ctx.letterSpacing = cs.letterSpacing;
+
+  for (const line of lines) {
+    const r = line.getBoundingClientRect();
+    /* draw each DOM line exactly where it sits, baseline ~82% of line box */
+    const cx = r.left - nameRect.left + pad + r.width / 2;
+    const by = r.top - nameRect.top + pad + r.height * 0.82;
+    ctx.fillText(line.textContent, cx, by);
+  }
+
+  const texture = new THREE.CanvasTexture(tex);
+  texture.anisotropy = 4;
+  texture.colorSpace = THREE.SRGBColorSpace;
+
+  const wpp = worldPerPixel();
+  const w = tex.width / dpr * wpp;
+  const h = tex.height / dpr * wpp;
+  const cxPx = nameRect.left + nameRect.width / 2 - (canvasRect.left + canvasRect.width / 2);
+  const cyPx = nameRect.top + nameRect.height / 2 - (canvasRect.top + canvasRect.height / 2);
+
+  if (textMesh) {
+    scene.remove(textMesh);
+    textMesh.geometry.dispose();
+    textMesh.material.dispose();
+    if (textTex) textTex.dispose();
+  }
+  textTex = texture;
+  const mat = new THREE.MeshBasicMaterial({
+    map: texture,
+    transparent: true,
+    alphaTest: 0.32,
+    depthWrite: true,
+    depthTest: true,
+    toneMapped: false,
+  });
+  textMesh = new THREE.Mesh(new THREE.PlaneGeometry(w, h), mat);
+  textMesh.position.set(cxPx * wpp, -cyPx * wpp, 0);
+  textMesh.renderOrder = 1;
+  scene.add(textMesh);
+
+  if (!wovenReady) {
+    wovenReady = true;
+    hero.classList.add('hero--woven');
+  }
+}
+
+/* ---- scene ---- */
 
 function init() {
   renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
@@ -96,6 +199,15 @@ function init() {
   resize();
   addEventListener('resize', resize);
 
+  const fontsReady = document.fonts ? document.fonts.ready : Promise.resolve();
+  fontsReady.then(() => {
+    /* fonts are in: weave the name into the cloth */
+    requestAnimationFrame(() => {
+      buildTextPlane();
+      if (reduced) { setTime(3.2); renderer.render(scene, camera); }
+    });
+  });
+
   if (reduced) {
     setTime(3.2);
     renderer.render(scene, camera);
@@ -106,7 +218,7 @@ function init() {
     const nx = (e.clientX / innerWidth) * 2 - 1;
     const halfW = Math.tan((camera.fov * Math.PI) / 360) * camera.position.z * camera.aspect;
     mouse.tx = nx * halfW;
-    mouse.ty = (0.5 - e.clientY / innerHeight) * 1.7;
+    mouse.ty = (0.5 - e.clientY / innerHeight) * 1.4;
   }, { passive: true });
 
   new IntersectionObserver((entries) => {
@@ -137,20 +249,25 @@ function loop() {
   mouse.y += (mouse.ty - mouse.y) * 0.06;
   const t = clock.getElapsedTime();
   setTime(t);
-  camera.position.x = Math.sin(t * 0.05) * 0.4;
-  camera.position.y = Math.cos(t * 0.043) * 0.28;
+  camera.position.x = Math.sin(t * 0.05) * 0.32;
+  camera.position.y = Math.cos(t * 0.043) * 0.22;
   camera.lookAt(0, 0, 0);
   renderer.render(scene, camera);
   requestAnimationFrame(loop);
 }
 
+let textRebuildTimer;
 function resize() {
   const w = canvas.clientWidth || innerWidth;
   const h = canvas.clientHeight || innerHeight;
   renderer.setSize(w, h, false);
   camera.aspect = w / h;
   camera.updateProjectionMatrix();
-  if (reduced) { setTime(3.2); renderer.render(scene, camera); }
+  clearTimeout(textRebuildTimer);
+  textRebuildTimer = setTimeout(() => {
+    if (wovenReady) buildTextPlane();
+    if (reduced) { setTime(3.2); renderer.render(scene, camera); }
+  }, 180);
 }
 
 try { init(); } catch (e) { canvas.remove(); }

@@ -73,17 +73,24 @@ invisible; prices never appear on this surface), no triumph arc.
 ## Structure
 
 ```
-[ HERO 100vh ]      void; 6 threads weave in 3D; CIARA GRIFFIN huge in Fraunces;
-                    kicker mono: THINKS · BUILDS · RENDERS · WRITES; thesis whisper
+[ HERO 100vh ]      void; 6 yarns weave OVER AND UNDER the name (the wordmark is
+                    a plane inside the scene); kicker mono; thesis whisper
 [ MANIFESTO ]       ~60vh, 52ch measure, cream on ink; thread runs the left margin
-[ I   RETINUE ]     full register shift
-[ II  EN ]          full register shift
-[ III WCT ]         full register shift
-[ IV  SAT ]         full register shift
-[ V   ATTCU ]       full register shift
+[ I   ATTCU ]       full register shift        (order reversed per Kira 11/07:
+[ II  SAT ]         full register shift         the journey runs the thesis
+[ III EN ]          full register shift         backwards, "and then they create
+[ IV  RETINUE ]     full register shift         us" first, "we create tools"
+[ V   WCT ]         full register shift         last, and the coda says it
+[ PATTERN BOOK ]    writing, ink register       forwards)
 [ CODA ]            return to void; braid resolves into the thesis line
-[ CONTACT/FOOT ]    name, Barcelona / Lisbon / Remote, LinkedIn, the six surfaces
+[ CONTACT/FOOT ]    About / Writing / email / LinkedIn, the six surfaces
 ```
+
+Subpages: `/writing/` (the pattern book, ink register, ledger of drafts),
+`/writing/<slug>/` (a draft: cream ground, six-colour selvedge band down the
+left edge, running-stitch rules, drop cap, tied-off knot at the end),
+`/about/` (the longer version, ink register, mono facts table).
+Domain, when live: ciaragriffin.xyz (cited in the chrome; a loom has three axes).
 
 ## Motion discipline (lessons from the WCT/SAT/ATTCU builds)
 

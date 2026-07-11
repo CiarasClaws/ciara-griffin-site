@@ -12,13 +12,14 @@ const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 
 const REGISTERS = {
   master:  { label: 'THE LOOM',                       thread: '#F3EFE7' },
-  retinue: { label: 'WEFT I · THE RETINUE',      thread: '#3D544B' },
-  en:      { label: 'WEFT II · EPISTEMIC NET',   thread: '#37444E' },
-  wct:     { label: 'WEFT III · WE CREATE TOOLS', thread: '#CBFF04' },
-  sat:     { label: 'WEFT IV · SOMETIMES AESTHETIC', thread: '#0F0F0F' },
-  attcu:   { label: 'WEFT V · AND THEN THEY CREATE US', thread: '#002FA7' },
+  attcu:   { label: 'WEFT I · AND THEN THEY CREATE US', thread: '#002FA7' },
+  sat:     { label: 'WEFT II · SOMETIMES AESTHETIC', thread: '#0F0F0F' },
+  en:      { label: 'WEFT III · EPISTEMIC NET',   thread: '#37444E' },
+  retinue: { label: 'WEFT IV · THE RETINUE',      thread: '#3D544B' },
+  wct:     { label: 'WEFT V · WE CREATE TOOLS', thread: '#CBFF04' },
 };
 const codaLabel = 'THE SELVEDGE';
+const bookLabel = 'THE PATTERN BOOK';
 let currentThread = REGISTERS.master.thread;
 
 const navState = $('#navState');
@@ -39,6 +40,7 @@ const regIO = new IntersectionObserver((entries) => {
     if (!e.isIntersecting) continue;
     const name = e.target.dataset.register;
     const label = e.target.id === 'selvedge' ? codaLabel
+      : e.target.id === 'writing' ? bookLabel
       : (REGISTERS[name] ? REGISTERS[name].label : REGISTERS.master.label);
     switchRegister(name, label);
   }
@@ -52,14 +54,15 @@ $$('.hero__line').forEach((line, li) => {
 });
 
 const REVEAL_SEL = [
-  '.manifesto__note', '.manifesto__text',
+  '.manifesto__note', '.manifesto__text', '.manifesto__more',
   '.weft__mark', '.weft__wordmark', '.retinue-caps', '.weft__lede',
   '.wct-cards .wct-card', '.specimen', '.sat-strip', '.weft__exit',
+  '.patternbook__title', '.patternbook__lede', '.pb-row',
   '.coda__mark', '.coda__braid', '.coda__thesis', '.coda__contact',
   '.coda__surfaces',
 ].join(', ');
 
-$$('.manifesto, .weft, .coda').forEach((section) => {
+$$('.manifesto, .weft, .patternbook, .coda').forEach((section) => {
   $$(REVEAL_SEL, section).forEach((el, i) => {
     el.classList.add('reveal');
     el.style.setProperty('--d', `${Math.min(i * 0.09, 0.55)}s`);
@@ -107,11 +110,12 @@ function buildSpine() {
     return { top: el.offsetTop, bot: el.offsetTop + el.offsetHeight, el };
   };
   const man = sec('#manifesto');
-  const ret = sec('#the-retinue');
-  const en = sec('#epistemic-net');
-  const wct = sec('#we-create-tools');
-  const sat = sec('#sometimes-aesthetic');
   const attcu = sec('#and-then-they-create-us');
+  const sat = sec('#sometimes-aesthetic');
+  const en = sec('#epistemic-net');
+  const ret = sec('#the-retinue');
+  const wct = sec('#we-create-tools');
+  const book = sec('#writing');
   const coda = sec('#selvedge');
   const braidEl = $('.coda__braid');
   const braidY = coda.top + braidEl.offsetTop + 8;
@@ -181,84 +185,94 @@ function buildSpine() {
     leg([addPath(d, 'rgba(243,239,231,.55)', 1.5)], 0, man.bot - inset(man));
   }
 
-  /* I — cross to the right, one slow curve. the retinue */
+  /* I — IKB with a misregistered pink ghost. the press */
   {
-    const e = inset(ret);
+    const e = inset(attcu);
     const x = narrow ? L : R;
     const px = narrow ? L : L + 4;
-    const d = `M ${fmt(px)},${fmt(man.bot - inset(man))} ${cross(px, man.bot - inset(man), x, ret.top + e)}`
-      + bulgeRun(x, ret.top + e, ret.bot - e, narrow ? 4 : 26);
-    const dye = dyeGradient('#F3EFE7', '#3D544B', man.bot - inset(man), ret.top + e, .55, .8);
-    leg([addPath(d, dye, 1.5)], man.bot - inset(man), ret.bot - e);
+    const y0 = attcu.top + e, y1 = attcu.bot - e;
+    const d = `M ${fmt(px)},${fmt(man.bot - inset(man))} ${cross(px, man.bot - inset(man), x, y0)}`
+      + bulgeRun(x, y0, y1, narrow ? 4 : 22);
+    const ghost = addPath(d, dyeGradient('#FF48B4', '#FF48B4', man.bot - inset(man), y0, 0, .65), 1.5, { transform: 'translate(2.5,-2)' });
+    const ink = addPath(d, dyeGradient('#F3EFE7', '#002FA7', man.bot - inset(man), y0, .55, .9), 1.5);
+    leg([ghost, ink], man.bot - inset(man), y1);
   }
 
-  /* II — hop node to node, the net */
+  /* II — right-angle mono routing, dead straight. the studio */
   {
-    const e = inset(en);
+    const e = inset(sat);
     const x = narrow ? L : L;
     const px = narrow ? L : R;
+    const y0 = sat.top + e, y1 = sat.bot - e;
+    const jogY = y0 - Math.min(60, inset(attcu));
+    const d = `M ${fmt(px)},${fmt(attcu.bot - inset(attcu))} L ${fmt(px)},${fmt(jogY)} L ${fmt(x)},${fmt(jogY)} L ${fmt(x)},${fmt(y1)}`;
+    const dye = dyeGradient('#002FA7', '#0F0F0F', attcu.bot - inset(attcu), y0, .9, .85);
+    leg([addPath(d, dye, 1.5)], attcu.bot - inset(attcu), y1);
+  }
+
+  /* III — hop node to node, the net */
+  {
+    const e = inset(en);
+    const x = narrow ? L : R;
+    const px = narrow ? L : L;
     const y0 = en.top + e, y1 = en.bot - e;
-    const offs = narrow ? [0, 7, -5, 8, 0] : [0, 26, -18, 30, 0];
+    const offs = narrow ? [0, -7, 5, -8, 0] : [0, -26, 18, -30, 0];
     const fr = [0, 0.25, 0.5, 0.75, 1];
-    let d = `M ${fmt(px)},${fmt(ret.bot - inset(ret))} ${cross(px, ret.bot - inset(ret), x + offs[0], y0)}`;
+    let d = `M ${fmt(px)},${fmt(sat.bot - inset(sat))} ${cross(px, sat.bot - inset(sat), x + offs[0], y0)}`;
     const nodes = [];
     for (let k = 1; k < fr.length; k++) {
       const nx = x + offs[k], ny = y0 + (y1 - y0) * fr[k];
       d += ` L ${fmt(nx)},${fmt(ny)}`;
       if (k < fr.length - 1) nodes.push(addNode(nx, ny, '#37444E'));
     }
-    const dye = dyeGradient('#3D544B', '#37444E', ret.bot - inset(ret), y0, .8, .8);
-    leg([addPath(d, dye, 1.5)], ret.bot - inset(ret), y1, nodes);
+    const dye = dyeGradient('#0F0F0F', '#37444E', sat.bot - inset(sat), y0, .85, .8);
+    leg([addPath(d, dye, 1.5)], sat.bot - inset(sat), y1, nodes);
   }
 
-  /* III — zigzag stitch, lime over black. the toolshop */
+  /* IV — cross back left, one slow curve. the retinue */
+  {
+    const e = inset(ret);
+    const x = narrow ? L : L;
+    const px = narrow ? L : R;
+    const d = `M ${fmt(px)},${fmt(en.bot - inset(en))} ${cross(px, en.bot - inset(en), x, ret.top + e)}`
+      + bulgeRun(x, ret.top + e, ret.bot - e, narrow ? -4 : -26);
+    const dye = dyeGradient('#37444E', '#3D544B', en.bot - inset(en), ret.top + e, .8, .8);
+    leg([addPath(d, dye, 1.5)], en.bot - inset(en), ret.bot - e);
+  }
+
+  /* V — zigzag stitch, lime over black. the toolshop */
   {
     const e = inset(wct);
     const x = narrow ? L : R;
     const px = narrow ? L : L;
     const y0 = wct.top + e, y1 = wct.bot - e;
     const amp = narrow ? 4 : 8;
-    let d = `M ${fmt(px)},${fmt(en.bot - inset(en))} ${cross(px, en.bot - inset(en), x, y0)}`;
+    let d = `M ${fmt(px)},${fmt(ret.bot - inset(ret))} ${cross(px, ret.bot - inset(ret), x, y0)}`;
     const step = 26;
     let k = 0;
     for (let y = y0 + step; y < y1; y += step, k++) d += ` L ${fmt(x + (k % 2 ? -amp : amp))},${fmt(y)}`;
     d += ` L ${fmt(x)},${fmt(y1)}`;
-    const under = addPath(d, dyeGradient('#37444E', '#000', en.bot - inset(en), y0, .85, .9), 3);
-    const over = addPath(d, dyeGradient('#37444E', '#CBFF04', en.bot - inset(en), y0, 0, 1), 1.5);
-    leg([under, over], en.bot - inset(en), y1);
+    const under = addPath(d, dyeGradient('#3D544B', '#000', ret.bot - inset(ret), y0, .85, .9), 3);
+    const over = addPath(d, dyeGradient('#3D544B', '#CBFF04', ret.bot - inset(ret), y0, 0, 1), 1.5);
+    leg([under, over], ret.bot - inset(ret), y1);
   }
 
-  /* IV — right-angle mono routing, dead straight. the studio */
+  /* VI — into the pattern book, cream again */
   {
-    const e = inset(sat);
-    const x = narrow ? L : L;
+    const e = inset(book);
+    const x = narrow ? L : L + 4;
     const px = narrow ? L : R;
-    const y0 = sat.top + e, y1 = sat.bot - e;
-    const jogY = y0 - Math.min(60, inset(wct));
-    let d = `M ${fmt(px)},${fmt(wct.bot - inset(wct))} L ${fmt(px)},${fmt(jogY)} L ${fmt(x)},${fmt(jogY)} L ${fmt(x)},${fmt(y1)}`;
-    const dye = dyeGradient('#CBFF04', '#0F0F0F', wct.bot - inset(wct), y0, .9, .85);
+    const y0 = book.top + e, y1 = book.bot - e;
+    const d = `M ${fmt(px)},${fmt(wct.bot - inset(wct))} ${cross(px, wct.bot - inset(wct), x, y0)} L ${fmt(x)},${fmt(y1)}`;
+    const dye = dyeGradient('#CBFF04', '#F3EFE7', wct.bot - inset(wct), y0, .9, .55);
     leg([addPath(d, dye, 1.5)], wct.bot - inset(wct), y1);
   }
 
-  /* V — IKB with a misregistered pink ghost. the press */
+  /* VII — home, into the braid */
   {
-    const e = inset(attcu);
-    const x = narrow ? L : R;
-    const px = narrow ? L : L;
-    const y0 = attcu.top + e, y1 = attcu.bot - e;
-    const d = `M ${fmt(px)},${fmt(sat.bot - inset(sat))} ${cross(px, sat.bot - inset(sat), x, y0)}`
-      + bulgeRun(x, y0, y1, narrow ? 4 : 22);
-    const ghost = addPath(d, dyeGradient('#FF48B4', '#FF48B4', sat.bot - inset(sat), y0, 0, .65), 1.5, { transform: 'translate(2.5,-2)' });
-    const ink = addPath(d, dyeGradient('#0F0F0F', '#002FA7', sat.bot - inset(sat), y0, .85, .9), 1.5);
-    leg([ghost, ink], sat.bot - inset(sat), y1);
-  }
-
-  /* VI — home, into the braid */
-  {
-    const px = narrow ? L : R;
-    const d = `M ${fmt(px)},${fmt(attcu.bot - inset(attcu))} ${cross(px, attcu.bot - inset(attcu), W / 2, braidY)}`;
-    const dye = dyeGradient('#002FA7', '#F3EFE7', attcu.bot - inset(attcu), coda.top + 60, .9, .6);
-    leg([addPath(d, dye, 1.5)], attcu.bot - inset(attcu), braidY);
+    const px = narrow ? L : L + 4;
+    const d = `M ${fmt(px)},${fmt(book.bot - inset(book))} ${cross(px, book.bot - inset(book), W / 2, braidY)}`;
+    leg([addPath(d, 'rgba(243,239,231,.6)', 1.5)], book.bot - inset(book), braidY);
   }
 
   for (const l of legs) {
@@ -291,7 +305,7 @@ function updateSpine() {
 
 const braidCanvas = $('.braid');
 const coda = $('#selvedge');
-const BRAID_COLORS = ['#6FA08A', '#5C7284', '#CBFF04', '#F3EFE7', '#FF6347', '#2E5BFF'];
+const BRAID_COLORS = ['#4C67D6', '#E8604A', '#718598', '#F3EFE7', '#7FA48E', '#B9D247'];
 let braidCtx, braidW = 0, braidH = 0, lastBraidP = -1;
 
 function sizeBraid() {
