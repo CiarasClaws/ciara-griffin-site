@@ -24,7 +24,8 @@
   --g-sat: #F9F9F9;
   --g-attcu: #F4EFE3;
 
-  --f-display: "Fraunces", "Iowan Old Style", Georgia, serif;
+  --f-display: "Mireille", "Iowan Old Style", Georgia, serif;
+  --f-body: "IBM Plex Serif", Georgia, serif;
   --f-mono: "Fragment Mono", "SF Mono", Menlo, monospace;
 
   --ease-out: cubic-bezier(.19, 1, .22, 1);
@@ -45,7 +46,7 @@ html {
 body {
   background: var(--ink);
   color: var(--cream);
-  font-family: var(--f-display);
+  font-family: var(--f-body);
   font-optical-sizing: auto;
   font-size: 16px;
   line-height: 1.6;
@@ -122,8 +123,7 @@ html.js body.is-ready .veil {
   position: fixed; top: 1.3rem; left: clamp(1.4rem, 4vw, 3rem);
   z-index: 50;
   font-family: var(--f-display);
-  font-style: italic;
-  font-weight: 480;
+  font-weight: 400;
   font-size: 1.02rem;
   line-height: 1;
   text-decoration: none;
@@ -228,7 +228,7 @@ html:not(.js) #loom { opacity: 1; }
 }
 .hero__name {
   font-family: var(--f-display);
-  font-weight: 430;
+  font-weight: 400;
   font-size: min(clamp(3.4rem, 12.5vw, 10.6rem), 19vh);
   line-height: .99;
   letter-spacing: -.018em;
@@ -243,6 +243,7 @@ html.js .hero__line span {
 }
 html.js body.is-ready .hero__line span { transform: translateY(0); }
 .hero__whisper {
+  font-family: var(--f-body);
   font-style: italic;
   font-size: 1.06rem;
   color: rgba(243, 239, 231, .6);
@@ -330,7 +331,7 @@ html.js .reveal.is-in { opacity: 1; transform: none; }
 .manifesto__text {
   font-size: clamp(1.15rem, 1.9vw, 1.42rem);
   line-height: 1.78;
-  font-weight: 390;
+  font-weight: 400;
   max-width: 33em;
   margin-inline: auto;
   padding-inline: var(--pad-x);
@@ -399,7 +400,7 @@ html.js .reveal.is-in { opacity: 1; transform: none; }
   margin-bottom: clamp(1.4rem, 3vh, 2rem);
 }
 .weft__lede {
-  font-family: var(--f-display);
+  font-family: var(--f-body);
   font-size: clamp(1.08rem, 1.5vw, 1.22rem);
   line-height: 1.72;
   max-width: 36em;
@@ -594,7 +595,7 @@ html.js .reveal.is-in { opacity: 1; transform: none; }
   text-transform: uppercase;
   letter-spacing: .01em;
 }
-.weft--sat .weft__lede { font-family: var(--f-display); }
+.weft--sat .weft__lede { font-family: var(--f-body); }
 .sat-reg { font-size: .3em; vertical-align: super; letter-spacing: 0; }
 .sat-drag-label {
   font-family: "Archivo", sans-serif;
@@ -757,12 +758,12 @@ html.js .reveal.is-in { opacity: 1; transform: none; }
 }
 .patternbook__title {
   font-family: var(--f-display);
-  font-weight: 430;
+  font-weight: 400;
   font-size: clamp(2.2rem, 5vw, 4rem);
   line-height: 1.08;
   margin-bottom: clamp(1.4rem, 3vh, 2rem);
 }
-.patternbook__title em { font-style: italic; color: var(--metal); }
+.patternbook__title em { font-family: var(--f-body); font-style: italic; font-size: .94em; color: var(--metal); }
 .patternbook__lede {
   font-size: clamp(1.05rem, 1.4vw, 1.18rem);
   line-height: 1.72;
@@ -790,7 +791,7 @@ html.js .reveal.is-in { opacity: 1; transform: none; }
 .pb-row__draft { width: 28px; height: 28px; fill: var(--metal); opacity: .8; transition: fill .3s, opacity .3s; }
 .pb-row:hover .pb-row__draft { fill: var(--cream); opacity: 1; }
 .pb-row__title {
-  font-family: var(--f-display);
+  font-family: var(--f-body);
   font-size: clamp(1.15rem, 1.8vw, 1.5rem);
   font-style: italic;
 }
@@ -830,7 +831,8 @@ html.js .reveal.is-in { opacity: 1; transform: none; }
 .coda__braid { width: min(680px, 88vw); height: clamp(160px, 26vh, 280px); }
 .braid { width: 100%; height: 100%; display: block; }
 .coda__thesis {
-  font-weight: 420;
+  font-family: var(--f-body);
+  font-weight: 400;
   font-size: min(clamp(2rem, 5.2vw, 4.3rem), 11vh);
   line-height: 1.16;
   max-width: 16em;
@@ -942,12 +944,12 @@ html.js .reveal.is-in { opacity: 1; transform: none; }
 .page--book .page__mark { color: var(--metal); }
 .book__title {
   font-family: var(--f-display);
-  font-weight: 430;
+  font-weight: 400;
   font-size: clamp(2.6rem, 6.4vw, 5.2rem);
   line-height: 1.04;
   margin-bottom: 1.4rem;
 }
-.book__title em { font-style: italic; color: var(--metal); }
+.book__title em { font-family: var(--f-body); font-style: italic; font-size: .94em; color: var(--metal); }
 .book__lede {
   font-size: clamp(1.05rem, 1.4vw, 1.18rem);
   line-height: 1.72;
@@ -989,13 +991,13 @@ html.js .reveal.is-in { opacity: 1; transform: none; }
 .page--draft .page__mark { color: #6B6660; opacity: 1; }
 .draft__title {
   font-family: var(--f-display);
-  font-weight: 440;
+  font-weight: 400;
   font-size: clamp(2.3rem, 5.6vw, 4.4rem);
   line-height: 1.06;
   letter-spacing: -.015em;
   margin-bottom: 1.2rem;
 }
-.draft__title em { font-style: italic; }
+.draft__title em { font-family: var(--f-body); font-style: italic; font-size: .94em; }
 .draft__stitch {
   width: 140px; height: 1px;
   border: 0;
@@ -1018,7 +1020,7 @@ html.js .reveal.is-in { opacity: 1; transform: none; }
 .draft__body p { margin-bottom: 1.5em; }
 .draft__body p:first-of-type::first-letter {
   font-family: var(--f-display);
-  font-weight: 500;
+  font-weight: 400;
   font-size: 3.4em;
   line-height: .82;
   float: left;
@@ -1033,7 +1035,7 @@ html.js .reveal.is-in { opacity: 1; transform: none; }
 }
 .draft__body a:hover { color: #002FA7; border-color: #002FA7; }
 .draft__pull {
-  font-family: var(--f-display);
+  font-family: var(--f-body);
   font-style: italic;
   font-size: clamp(1.4rem, 2.4vw, 1.9rem);
   line-height: 1.4;
@@ -1062,13 +1064,13 @@ html.js .reveal.is-in { opacity: 1; transform: none; }
 .page--about .page__mark { color: var(--metal); }
 .about__title {
   font-family: var(--f-display);
-  font-weight: 430;
+  font-weight: 400;
   font-size: clamp(2.4rem, 6vw, 4.8rem);
   line-height: 1.06;
   max-width: 13em;
   margin-bottom: clamp(2.4rem, 5vh, 3.6rem);
 }
-.about__title em { font-style: italic; color: var(--metal); }
+.about__title em { font-family: var(--f-body); font-style: italic; font-size: .94em; color: var(--metal); }
 .about__body {
   font-size: clamp(1.1rem, 1.5vw, 1.25rem);
   line-height: 1.78;

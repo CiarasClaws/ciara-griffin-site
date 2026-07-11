@@ -123,7 +123,7 @@ function buildTextPlane() {
   ctx.fillStyle = '#F3EFE7';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'alphabetic';
-  ctx.font = `${cs.fontWeight} ${parseFloat(cs.fontSize)}px Fraunces, Georgia, serif`;
+  ctx.font = `${cs.fontWeight} ${parseFloat(cs.fontSize)}px Mireille, Georgia, serif`;
   if ('letterSpacing' in ctx) ctx.letterSpacing = cs.letterSpacing;
 
   for (const line of lines) {
