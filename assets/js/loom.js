@@ -311,6 +311,13 @@ function frame(now) {
   v.addColorStop(1, 'rgba(3,5,10,0.42)');
   ctx.fillStyle = v;
   ctx.fillRect(0, 0, W, H);
+  /* resolve to the page's ink at the bottom edge so the hero meets the
+     next section without a seam */
+  const seam = ctx.createLinearGradient(0, H * 0.8, 0, H);
+  seam.addColorStop(0, 'rgba(11,13,18,0)');
+  seam.addColorStop(1, 'rgba(11,13,18,1)');
+  ctx.fillStyle = seam;
+  ctx.fillRect(0, H * 0.8, W, H * 0.2 + 1);
 }
 
 function loop(now) {

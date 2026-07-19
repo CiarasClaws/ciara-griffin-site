@@ -205,7 +205,7 @@ body[data-register="attcu"]   .nav__state { color: #002FA7; background: var(--g-
   min-height: 560px;
   display: grid; place-items: center;
   /* ink-navy ground, matching the canvas field */
-  background: linear-gradient(#070C17, #04070F);
+  background: linear-gradient(#070C17, #0B0D12);
   overflow: hidden;
 }
 #loom {
