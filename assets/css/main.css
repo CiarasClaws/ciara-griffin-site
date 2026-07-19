@@ -523,6 +523,34 @@ html.js body.is-ready .firstmachine__name img { opacity: 1; transform: none; }
   background: var(--ink);
 }
 
+/* ---------------- manifesto overlaid on the thread field ---------------- */
+
+.manifesto--overlaid {
+  position: absolute; inset: 0;
+  z-index: 2;
+  display: grid; place-items: center;
+  background: transparent;
+  padding: clamp(4rem, 10vh, 7rem) var(--pad-x);
+  pointer-events: none;
+}
+.manifesto--overlaid .manifesto__panel {
+  max-width: 36em;
+  padding: clamp(1.8rem, 4.5vh, 3rem) clamp(1.6rem, 3.5vw, 2.8rem);
+  background: rgba(7, 12, 23, .78);
+  border: 1px solid rgba(158, 178, 210, .14);
+  backdrop-filter: blur(9px);
+  -webkit-backdrop-filter: blur(9px);
+  pointer-events: auto;
+}
+.manifesto--overlaid .manifesto__note {
+  position: static;
+  margin-bottom: 1.4rem;
+}
+.manifesto--overlaid .manifesto__text {
+  padding-inline: 0;
+  margin-inline: 0;
+}
+
 /* ---------------- WEFT I · the retinue ---------------- */
 
 .weft--retinue {

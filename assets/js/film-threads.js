@@ -41,7 +41,7 @@ if (wrap && film) {
         drift: 0.015 + r() * 0.02,
         flow: 9 * (0.5 + r()),
         size: (W < 720 ? 9 : 11) + r() * 2,
-        lum: i === 2 ? 0.5 : 0.14 + r() * 0.14,
+        lum: i === 2 ? 0.68 : 0.24 + r() * 0.18,
       });
     }
   }
@@ -62,7 +62,7 @@ if (wrap && film) {
         const env = smooth(-10, 80, x) * (1 - smooth(W * 0.9, W + 10, x));
         const a = s.lum * env;
         if (a < 0.02) continue;
-        ctx.fillStyle = `rgba(190,208,232,${Math.min(0.6, a)})`;
+        ctx.fillStyle = `rgba(196,213,236,${Math.min(0.75, a)})`;
         ctx.fillText(ch, x, y);
       }
     }
