@@ -24,7 +24,8 @@
   --g-sat: #F9F9F9;
   --g-attcu: #F4EFE3;
 
-  --f-display: "Fraunces", "Iowan Old Style", Georgia, serif;
+  --f-display: "Bodoni Moda", "Bodoni 72", Didot, "Iowan Old Style", serif;
+  --f-body: "Inter", "Helvetica Neue", Arial, sans-serif;
   --f-mono: "Fragment Mono", "SF Mono", Menlo, monospace;
 
   --ease-out: cubic-bezier(.19, 1, .22, 1);
@@ -200,10 +201,11 @@ body[data-register="attcu"]   .nav__state { color: #002FA7; background: var(--g-
 
 .hero {
   position: relative;
-  height: 100svh;
+  height: 82svh;
   min-height: 560px;
   display: grid; place-items: center;
-  background: var(--ink);
+  /* ink-navy ground, matching the canvas field */
+  background: linear-gradient(#070C17, #0B0D12);
   overflow: hidden;
 }
 #loom {
@@ -243,6 +245,7 @@ html.js .hero__line span {
 }
 html.js body.is-ready .hero__line span { transform: translateY(0); }
 .hero__whisper {
+  font-family: var(--f-display);
   font-style: italic;
   font-size: 1.06rem;
   color: rgba(243, 239, 231, .6);
@@ -441,6 +444,110 @@ html.js .reveal.is-in { opacity: 1; transform: none; }
   letter-spacing: .26em;
   opacity: .7;
   margin-top: 1rem;
+}
+
+/* ---------------- interlude · the first machine ---------------- */
+
+.firstmachine {
+  position: relative;
+  background: var(--ink);
+  color: var(--cream);
+}
+.firstmachine__inner {
+  max-width: 33em;
+  margin-inline: auto;
+  padding-inline: var(--pad-x);
+  margin-bottom: clamp(2.6rem, 6vh, 4.4rem);
+}
+.firstmachine__mark {
+  font: 400 .6rem/1 var(--f-mono);
+  letter-spacing: .34em; text-indent: .34em;
+  color: var(--metal);
+  margin-bottom: clamp(1.6rem, 4vh, 2.6rem);
+}
+.firstmachine__title {
+  font-family: var(--f-display);
+  font-weight: 480;
+  font-size: clamp(1.7rem, 3.4vw, 2.7rem);
+  line-height: 1.14;
+  margin-bottom: clamp(1.2rem, 3vh, 2rem);
+}
+.firstmachine__text {
+  font-size: clamp(1.05rem, 1.6vw, 1.26rem);
+  line-height: 1.78;
+  opacity: .92;
+}
+.firstmachine__text em { font-style: italic; }
+.firstmachine__filmframe { margin: 0; position: relative; }
+.firstmachine__threads {
+  position: absolute; inset: 0 0 auto 0;
+  width: 100%; height: 100%;
+  z-index: 1;
+  pointer-events: none;
+}
+.firstmachine__name {
+  position: absolute; inset: 0 0 6% 0;
+  z-index: 2;
+  display: grid; place-content: center; justify-items: center;
+  gap: clamp(.6rem, 2vh, 1.4rem);
+  pointer-events: none;
+  margin: 0;
+}
+.firstmachine__name img {
+  display: block;
+  height: clamp(3rem, 11.5vh, 7.6rem);
+  width: auto;
+  max-width: 86vw;
+  object-fit: contain;
+  filter: drop-shadow(0 3px 28px rgba(4, 7, 15, .6));
+}
+html.js .firstmachine__name img {
+  opacity: 0; transform: translateY(.4em);
+  transition: opacity 1.2s var(--ease-out), transform 1.2s var(--ease-out);
+}
+html.js .firstmachine__name img + img { transition-delay: .15s; }
+html.js body.is-ready .firstmachine__name img { opacity: 1; transform: none; }
+.firstmachine__film {
+  display: block;
+  width: 100%;
+  height: min(92svh, 56.25vw); /* full-bleed 16:9, capped to the viewport */
+  object-fit: cover;
+  background: #04070F;
+}
+.firstmachine__caption {
+  font: 400 .58rem/1.8 var(--f-mono);
+  letter-spacing: .22em;
+  color: var(--metal);
+  text-align: right;
+  padding: .9rem var(--pad-x) 0;
+  background: var(--ink);
+}
+
+/* ---------------- manifesto overlaid on the thread field ---------------- */
+
+.manifesto--overlaid {
+  position: absolute; inset: 0;
+  z-index: 2;
+  display: grid; place-items: center;
+  background: transparent;
+  padding: clamp(4rem, 10vh, 7rem) var(--pad-x);
+  pointer-events: none;
+}
+.manifesto--overlaid .manifesto__panel {
+  max-width: 36em;
+  padding: clamp(1.8rem, 4.5vh, 3rem) clamp(1.6rem, 3.5vw, 2.8rem);
+  background: rgba(7, 12, 23, .78);
+  backdrop-filter: blur(9px);
+  -webkit-backdrop-filter: blur(9px);
+  pointer-events: auto;
+}
+.manifesto--overlaid .manifesto__note {
+  position: static;
+  margin-bottom: 1.4rem;
+}
+.manifesto--overlaid .manifesto__text {
+  padding-inline: 0;
+  margin-inline: 0;
 }
 
 /* ---------------- WEFT I · the retinue ---------------- */
@@ -827,9 +934,9 @@ html.js .reveal.is-in { opacity: 1; transform: none; }
   color: var(--metal);
   text-align: left;
 }
-.coda__braid { width: min(680px, 88vw); height: clamp(160px, 26vh, 280px); }
 .braid { width: 100%; height: 100%; display: block; }
 .coda__thesis {
+  font-family: var(--f-display);
   font-weight: 420;
   font-size: min(clamp(2rem, 5.2vw, 4.3rem), 11vh);
   line-height: 1.16;
@@ -837,6 +944,17 @@ html.js .reveal.is-in { opacity: 1; transform: none; }
   margin: clamp(2rem, 5vh, 3.4rem) 0 clamp(2.4rem, 6vh, 4rem);
 }
 .coda__thesis em { font-style: italic; }
+/* the thread cascades into the sentence: words settle as the spine arrives */
+html.js .coda__thesis .w {
+  display: inline-block;
+  opacity: 0; transform: translateY(.38em);
+  transition: opacity .9s var(--ease-out), transform .9s var(--ease-out);
+  transition-delay: var(--d, 0s);
+}
+html.js .coda.is-sewn .coda__thesis .w { opacity: 1; transform: none; }
+@media (prefers-reduced-motion: reduce) {
+  html.js .coda__thesis .w { opacity: 1; transform: none; transition: none; }
+}
 .coda__contact { display: grid; gap: 1rem; justify-items: center; }
 .coda__place {
   font-style: italic;
