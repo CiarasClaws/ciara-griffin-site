@@ -58,7 +58,6 @@ const REVEAL_SEL = [
   '.weft__mark', '.weft__wordmark', '.retinue-caps', '.weft__lede',
   '.wct-cards .wct-card', '.specimen', '.sat-strip', '.weft__exit',
   '.patternbook__title', '.patternbook__lede', '.pb-row',
-  '.firstmachine__caption',
   '.coda__mark', '.coda__contact',
   '.coda__surfaces',
 ].join(', ');
@@ -135,7 +134,6 @@ function buildSpine() {
     const el = $(id);
     return { top: el.offsetTop, bot: el.offsetTop + el.offsetHeight, el };
   };
-  const man = sec('#manifesto');
   const attcu = sec('#and-then-they-create-us');
   const sat = sec('#sometimes-aesthetic');
   const en = sec('#epistemic-net');
@@ -212,24 +210,15 @@ function buildSpine() {
       + ` C ${fmt(x - bx)},${fmt(my + dy * 0.12)} ${fmt(x)},${fmt(y1 - dy * 0.35)} ${fmt(x)},${fmt(y1)}`;
   };
 
-  /* 0 — straight drop from the hero cue into the manifesto margin (ink ground) */
-  {
-    const x = narrow ? L : L + 4;
-    const entry = man.top + Math.max(200, (man.bot - man.top) * 0.24);
-    const drop = 64;
-    const d = `M ${fmt(W / 2)},-30 L ${fmt(W / 2)},${drop} ${cross(W / 2, drop, x, entry)} L ${fmt(x)},${fmt(man.bot - inset(man))}`;
-    textLeg(d, 0, man.bot - inset(man), STEEL_ON_DARK);
-  }
-
-  /* I — the press (light ground) */
+  /* I — the thread falls out of the field above, into the press */
   {
     const e = inset(attcu);
     const x = narrow ? L : R;
     const px = narrow ? L : L + 4;
     const y0 = attcu.top + e, y1 = attcu.bot - e;
-    const d = `M ${fmt(px)},${fmt(man.bot - inset(man))} ${cross(px, man.bot - inset(man), x, y0)}`
+    const d = `M ${fmt(px)},-30 L ${fmt(px)},40 ${cross(px, 40, x, y0)}`
       + bulgeRun(x, y0, y1, narrow ? 4 : 22);
-    textLeg(d, man.bot - inset(man), y1, STEEL_ON_LIGHT);
+    textLeg(d, -30, y1, STEEL_ON_LIGHT);
   }
 
   /* II — right-angle routing, dead straight. the studio (light ground) */
