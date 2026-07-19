@@ -58,7 +58,7 @@ const REVEAL_SEL = [
   '.weft__mark', '.weft__wordmark', '.retinue-caps', '.weft__lede',
   '.wct-cards .wct-card', '.specimen', '.sat-strip', '.weft__exit',
   '.patternbook__title', '.patternbook__lede', '.pb-row',
-  '.firstmachine__mark', '.firstmachine__title', '.firstmachine__text', '.firstmachine__caption',
+  '.firstmachine__caption',
   '.coda__mark', '.coda__contact',
   '.coda__surfaces',
 ].join(', ');
@@ -136,10 +136,6 @@ function buildSpine() {
     return { top: el.offsetTop, bot: el.offsetTop + el.offsetHeight, el };
   };
   const man = sec('#manifesto');
-  const fm = sec('#the-first-machine');
-  const filmEl = $('.firstmachine__filmframe');
-  const filmTop = fm.top + filmEl.offsetTop;
-  const filmBot = filmTop + filmEl.offsetHeight;
   const attcu = sec('#and-then-they-create-us');
   const sat = sec('#sometimes-aesthetic');
   const en = sec('#epistemic-net');
@@ -225,22 +221,15 @@ function buildSpine() {
     textLeg(d, 0, man.bot - inset(man), STEEL_ON_DARK);
   }
 
-  /* 0b — down the margin and into the machine (the film swallows the thread) */
-  {
-    const x = narrow ? L : L + 4;
-    const d = `M ${fmt(x)},${fmt(man.bot - inset(man))} L ${fmt(x)},${fmt(filmTop - 16)}`;
-    textLeg(d, man.bot - inset(man), filmTop - 16, STEEL_ON_DARK);
-  }
-
-  /* I — the press (light ground); the thread re-emerges below the film */
+  /* I — the press (light ground) */
   {
     const e = inset(attcu);
     const x = narrow ? L : R;
     const px = narrow ? L : L + 4;
     const y0 = attcu.top + e, y1 = attcu.bot - e;
-    const d = `M ${fmt(px)},${fmt(filmBot + 16)} ${cross(px, filmBot + 16, x, y0)}`
+    const d = `M ${fmt(px)},${fmt(man.bot - inset(man))} ${cross(px, man.bot - inset(man), x, y0)}`
       + bulgeRun(x, y0, y1, narrow ? 4 : 22);
-    textLeg(d, filmBot + 16, y1, STEEL_ON_LIGHT);
+    textLeg(d, man.bot - inset(man), y1, STEEL_ON_LIGHT);
   }
 
   /* II — right-angle routing, dead straight. the studio (light ground) */
