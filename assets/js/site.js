@@ -476,7 +476,7 @@ if (enSection && enCanvas) {
       for (const n of nodes) { n.x *= ew / pw; n.y *= eh / ph; }
       return;
     }
-    const count = clamp(Math.round((ew * eh) / 26000), 26, 64);
+    const count = clamp(Math.round((ew * eh) / 52000), 14, 30);
     nodes = Array.from({ length: count }, () => ({
       x: Math.random() * ew, y: Math.random() * eh,
       vx: (Math.random() - 0.5) * 0.16, vy: (Math.random() - 0.5) * 0.16,
@@ -506,7 +506,7 @@ if (enSection && enCanvas) {
         ectx.beginPath();
         ectx.moveTo(a.x, a.y); ectx.lineTo(b.x, b.y);
         ectx.strokeStyle = '#37444E';
-        ectx.globalAlpha = (1 - d / R) * (0.1 + wake * 0.3);
+        ectx.globalAlpha = (1 - d / R) * (0.04 + wake * 0.3);
         ectx.lineWidth = 1;
         ectx.stroke();
       }
@@ -515,13 +515,13 @@ if (enSection && enCanvas) {
       const pd = Math.hypot(n.x - pointer.x, n.y - pointer.y);
       const wake = 1 - Math.min(pd, 320) / 320;
       ectx.beginPath();
-      ectx.arc(n.x, n.y, 1.7 + wake * 1.4, 0, Math.PI * 2);
+      ectx.arc(n.x, n.y, 1.4 + wake * 1.5, 0, Math.PI * 2);
       ectx.fillStyle = '#37444E';
-      ectx.globalAlpha = 0.35 + wake * 0.5;
+      ectx.globalAlpha = 0.12 + wake * 0.6;
       ectx.fill();
     }
     /* signal pulses along near edges */
-    if (!reduced && t - lastPulse > 1700 && nodes.length > 4) {
+    if (!reduced && t - lastPulse > 2600 && nodes.length > 4) {
       const a = nodes[(Math.random() * nodes.length) | 0];
       let best = null, bd = 1e9;
       for (const b of nodes) {
@@ -538,7 +538,7 @@ if (enSection && enCanvas) {
       const y = p.a.y + (p.b.y - p.a.y) * v;
       ectx.beginPath();
       ectx.arc(x, y, 2.2, 0, Math.PI * 2);
-      ectx.fillStyle = '#989F97';
+      ectx.fillStyle = '#37444E';
       ectx.globalAlpha = 1 - v;
       ectx.fill();
     }
