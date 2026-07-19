@@ -58,7 +58,7 @@ const REVEAL_SEL = [
   '.weft__mark', '.weft__wordmark', '.retinue-caps', '.weft__lede',
   '.wct-cards .wct-card', '.specimen', '.sat-strip', '.weft__exit',
   '.patternbook__title', '.patternbook__lede', '.pb-row',
-  '.coda__mark', '.coda__braid', '.coda__thesis', '.coda__contact',
+  '.coda__mark', '.coda__contact',
   '.coda__surfaces',
 ].join(', ');
 
@@ -142,8 +142,9 @@ function buildSpine() {
   const wct = sec('#we-create-tools');
   const book = sec('#writing');
   const coda = sec('#selvedge');
-  const braidEl = $('.coda__braid');
-  const braidY = coda.top + braidEl.offsetTop + 8;
+  const thesisEl = $('.coda__thesis');
+  const thesisY = coda.top + thesisEl.offsetTop;
+  const thesisW = thesisEl.offsetWidth;
 
   const inset = (s) => Math.min(130, (s.bot - s.top) * 0.14);
 
@@ -294,11 +295,21 @@ function buildSpine() {
     textLeg(d, wct.bot - inset(wct), y1, STEEL_ON_DARK);
   }
 
-  /* VII — home, into the braid (ink ground) */
+  /* VII — home: the thread descends and cascades into the sentence */
   {
     const px = narrow ? L : L + 4;
-    const d = `M ${fmt(px)},${fmt(book.bot - inset(book))} ${cross(px, book.bot - inset(book), W / 2, braidY)}`;
-    textLeg(d, book.bot - inset(book), braidY, STEEL_ON_DARK);
+    const fanY = thesisY - Math.min(200, thesisY - book.bot + 60);  /* where the delta begins */
+    const d = `M ${fmt(px)},${fmt(book.bot - inset(book))} ${cross(px, book.bot - inset(book), W / 2, fanY)}`;
+    textLeg(d, book.bot - inset(book), fanY, STEEL_ON_DARK);
+    /* the delta: the thread splits and pours across the width of the thesis */
+    const NB = narrow ? 5 : 7;
+    const spread = Math.min(thesisW * 0.92, W * 0.7);
+    const endY = thesisY - 14;
+    for (let k = 0; k < NB; k++) {
+      const fx = W / 2 + spread * (k / (NB - 1) - 0.5);
+      const bd = `M ${fmt(W / 2)},${fmt(fanY)} C ${fmt(W / 2)},${fmt(fanY + (endY - fanY) * 0.45)} ${fmt(fx)},${fmt(fanY + (endY - fanY) * 0.5)} ${fmt(fx)},${fmt(endY)}`;
+      textLeg(bd, fanY, endY, STEEL_ON_DARK);
+    }
   }
 
   if (reduced) for (const l of legs) l.nodes.forEach((n) => { n.style.opacity = .75; });
@@ -307,72 +318,20 @@ function buildSpine() {
 
 let fabricTop = 0;
 function updateSpine() {
-  if (reduced || !legs.length) return;
+  if (!legs.length) return;
+  const codaEl = $('.coda');
+  if (reduced) { if (codaEl) codaEl.classList.add('is-sewn'); return; }
   fabricTop = fabric.getBoundingClientRect().top + scrollY;
   const tip = scrollY + innerHeight * 0.62 - fabricTop;
+  let lastP = 0;
   for (const l of legs) {
     const p = clamp((tip - l.y0) / (l.y1 - l.y0), 0, 1);
+    lastP = p;
     l.rect.setAttribute('height', (l.span * p).toFixed(1));
     for (const n of l.nodes) n.style.opacity = tip > +n.dataset.y ? .75 : 0;
   }
-}
-
-/* ---------------- coda braid ---------------- */
-
-const braidCanvas = $('.braid');
-const coda = $('#selvedge');
-/* the braid in the hero's ink-and-steel language; the cream strand is the warp (her) */
-const BRAID_COLORS = ['#31456B', '#4A6390', '#6480AB', '#F3EFE7', '#8FA6C8', '#BFD0E8'];
-let braidCtx, braidW = 0, braidH = 0, lastBraidP = -1;
-
-function sizeBraid() {
-  if (!braidCanvas) return;
-  const dpr = Math.min(devicePixelRatio, 2);
-  braidW = braidCanvas.clientWidth; braidH = braidCanvas.clientHeight;
-  braidCanvas.width = braidW * dpr; braidCanvas.height = braidH * dpr;
-  braidCtx = braidCanvas.getContext('2d');
-  braidCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  lastBraidP = -1;
-  drawBraid(reduced ? 1 : currentBraidP());
-}
-
-function currentBraidP() {
-  const r = coda.getBoundingClientRect();
-  return clamp((innerHeight * 0.9 - r.top) / (innerHeight * 0.75), 0, 1);
-}
-
-function drawBraid(p) {
-  if (!braidCtx || Math.abs(p - lastBraidP) < 0.004) return;
-  lastBraidP = p;
-  const w = braidW, h = braidH, cx = w / 2;
-  braidCtx.clearRect(0, 0, w, h);
-  const N = BRAID_COLORS.length;
-  const steps = 110;
-  const ease = (v) => 1 - Math.pow(1 - v, 2.4);
-  for (let i = 0; i < N; i++) {
-    braidCtx.beginPath();
-    braidCtx.strokeStyle = BRAID_COLORS[i];
-    braidCtx.globalAlpha = i === 3 ? 0.95 : 0.78;
-    braidCtx.lineWidth = i === 3 ? 2 : 1.5;
-    const x0 = cx + (i - (N - 1) / 2) * (w / (N + 1));
-    for (let s = 0; s <= steps * p; s++) {
-      const v = s / steps;
-      const gather = ease(v);
-      const amp = 30 * Math.pow(Math.sin(Math.PI * Math.min(v * 1.12, 1)), 1.4);
-      const x = x0 + (cx - x0) * gather + Math.sin(v * Math.PI * 3.2 + (i * Math.PI) / 3) * amp * (1 - v * 0.55);
-      const y = v * (h - 8);
-      s === 0 ? braidCtx.moveTo(x, y) : braidCtx.lineTo(x, y);
-    }
-    braidCtx.stroke();
-  }
-  if (p > 0.985) {
-    braidCtx.globalAlpha = 1;
-    braidCtx.fillStyle = '#F3EFE7';
-    braidCtx.beginPath();
-    braidCtx.arc(cx, h - 8, 3.2, 0, Math.PI * 2);
-    braidCtx.fill();
-  }
-  braidCtx.globalAlpha = 1;
+  /* the delta legs finish last; when they near the sentence, sew it */
+  if (lastP > 0.72 && codaEl && !codaEl.classList.contains('is-sewn')) codaEl.classList.add('is-sewn');
 }
 
 /* ---------------- scroll pump ---------------- */
@@ -383,7 +342,6 @@ function onScroll() {
   ticking = true;
   requestAnimationFrame(() => {
     updateSpine();
-    if (!reduced) drawBraid(currentBraidP());
     ticking = false;
   });
 }
@@ -483,8 +441,58 @@ if (enSection && enCanvas) {
     }));
   }
 
+  /* the codex: a two-page spread constructed by the Van de Graaf canon —
+     page frames, the canon's diagonals, and each page's text block — drawn
+     as faint rule-work behind the net. The section reads as a book being
+     diagrammed, which is the EN register exactly. */
+  function drawCodex() {
+    const ph = Math.min(eh * 0.62, 760);           /* page height */
+    const pw = ph * 0.667;                          /* page width, 2:3 */
+    const top = (eh - ph) / 2;
+    const cx = ew / 2;
+    const ink = '#37444E';
+    ectx.lineWidth = 1;
+    for (const side of [-1, 1]) {
+      const x0 = side < 0 ? cx - pw : cx;           /* page rect */
+      ectx.strokeStyle = ink;
+      ectx.globalAlpha = 0.10;
+      ectx.strokeRect(x0, top, pw, ph);
+      /* canon diagonals: page diagonal + spread diagonal */
+      ectx.globalAlpha = 0.07;
+      ectx.beginPath();
+      if (side < 0) {
+        ectx.moveTo(x0, top + ph); ectx.lineTo(x0 + pw, top);          /* page diagonal */
+        ectx.moveTo(cx + pw, top + ph); ectx.lineTo(x0, top);          /* spread diagonal */
+      } else {
+        ectx.moveTo(x0 + pw, top + ph); ectx.lineTo(x0, top);
+        ectx.moveTo(cx - pw, top + ph); ectx.lineTo(x0 + pw, top);
+      }
+      ectx.stroke();
+      /* the canon's text block: margins 2/9 head+outer feel, 1/9 inner */
+      const iw = pw * 2 / 3, ih = ph * 2 / 3;
+      const inX = side < 0 ? x0 + pw / 9 : x0 + pw - pw / 9 - iw;
+      ectx.globalAlpha = 0.12;
+      ectx.strokeRect(side < 0 ? x0 + pw - pw * 2 / 9 - iw + iw : inX, 0, 0, 0); /* noop guard */
+      ectx.strokeRect(inX + (side < 0 ? pw * 2 / 9 - pw / 9 : -(pw * 2 / 9 - pw / 9)), top + ph / 9, iw, ih);
+      /* baseline rules inside the text block */
+      ectx.globalAlpha = 0.045;
+      const bx = inX + (side < 0 ? pw * 2 / 9 - pw / 9 : -(pw * 2 / 9 - pw / 9));
+      ectx.beginPath();
+      for (let k = 1; k < 9; k++) {
+        const y = top + ph / 9 + (ih * k) / 9;
+        ectx.moveTo(bx, y); ectx.lineTo(bx + iw, y);
+      }
+      ectx.stroke();
+    }
+    /* the spine of the book */
+    ectx.globalAlpha = 0.12;
+    ectx.beginPath(); ectx.moveTo(cx, top); ectx.lineTo(cx, top + ph); ectx.stroke();
+    ectx.globalAlpha = 1;
+  }
+
   function drawEn(t) {
     ectx.clearRect(0, 0, ew, eh);
+    drawCodex();
     const R = 130;
     for (const n of nodes) {
       if (!reduced) {
@@ -660,7 +668,6 @@ if (impression) {
 
 function buildAll() {
   buildSpine();
-  sizeBraid();
 }
 let rsTimer;
 addEventListener('resize', () => { clearTimeout(rsTimer); rsTimer = setTimeout(buildAll, 220); });
