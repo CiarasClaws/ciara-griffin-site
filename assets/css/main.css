@@ -537,7 +537,6 @@ html.js body.is-ready .firstmachine__name img { opacity: 1; transform: none; }
   max-width: 36em;
   padding: clamp(1.8rem, 4.5vh, 3rem) clamp(1.6rem, 3.5vw, 2.8rem);
   background: rgba(7, 12, 23, .78);
-  border: 1px solid rgba(158, 178, 210, .14);
   backdrop-filter: blur(9px);
   -webkit-backdrop-filter: blur(9px);
   pointer-events: auto;
