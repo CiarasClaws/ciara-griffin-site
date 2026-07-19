@@ -58,7 +58,7 @@ const REVEAL_SEL = [
   '.weft__mark', '.weft__wordmark', '.retinue-caps', '.weft__lede',
   '.wct-cards .wct-card', '.specimen', '.sat-strip', '.weft__exit',
   '.patternbook__title', '.patternbook__lede', '.pb-row',
-  '.coda__mark', '.coda__braid', '.coda__thesis', '.coda__contact',
+  '.coda__mark', '.coda__contact',
   '.coda__surfaces',
 ].join(', ');
 
@@ -83,12 +83,37 @@ function ready() {
 Promise.race([document.fonts ? document.fonts.ready : Promise.resolve(), new Promise((r) => setTimeout(r, 1400))]).then(ready);
 
 /* ---------------- the spine ---------------- */
+/* One thread of language runs from the loom down the whole page.
+   The spine is the hero's threads continued: a stream of characters
+   (binary, digits, the thesis) set along the journey path in the same
+   steel-blue — light steel on ink grounds, deep steel on the brand
+   whites. It reveals downward as you scroll. */
 
 const fabric = $('.fabric');
 const spine = $('.spine');
 let legs = [];
 
 const fmt = (n) => Math.round(n * 10) / 10;
+
+/* steel on dark grounds / steel on light grounds */
+const STEEL_ON_DARK = 'rgba(158,178,210,.78)';
+const STEEL_ON_LIGHT = 'rgba(56,78,114,.82)';
+
+/* the spine's stream — mostly digits, the thesis surfacing now and then */
+function spineStream(chars, seed) {
+  const WORDS = ' we create tools and they create us \u00b7 ';
+  const TEX = ' texere \u00b7 ';
+  let out = '', x = seed;
+  while (out.length < chars) {
+    x = (x * 16807) % 2147483647;
+    const r = x / 2147483647;
+    if (r > 0.992) out += TEX;
+    else if (r > 0.982) out += WORDS;
+    else if (r > 0.972) out += ' ';
+    else out += r < 0.45 ? '0' : r < 0.86 ? '1' : r < 0.92 ? '3' : '8';
+  }
+  return out;
+}
 
 function buildSpine() {
   if (!fabric || !spine) return;
@@ -109,7 +134,6 @@ function buildSpine() {
     const el = $(id);
     return { top: el.offsetTop, bot: el.offsetTop + el.offsetHeight, el };
   };
-  const man = sec('#manifesto');
   const attcu = sec('#and-then-they-create-us');
   const sat = sec('#sometimes-aesthetic');
   const en = sec('#epistemic-net');
@@ -117,45 +141,56 @@ function buildSpine() {
   const wct = sec('#we-create-tools');
   const book = sec('#writing');
   const coda = sec('#selvedge');
-  const braidEl = $('.coda__braid');
-  const braidY = coda.top + braidEl.offsetTop + 8;
+  const thesisEl = $('.coda__thesis');
+  const thesisY = coda.top + thesisEl.offsetTop;
+  const thesisW = thesisEl.offsetWidth;
 
   const inset = (s) => Math.min(130, (s.bot - s.top) * 0.14);
 
   const NS = 'http://www.w3.org/2000/svg';
   const defs = document.createElementNS(NS, 'defs');
   spine.appendChild(defs);
-  let gradN = 0;
-  /* the thread dips into the next section's dye as it crosses the seam */
-  function dyeGradient(from, to, y1, y2, fromOp = 1, toOp = 1) {
-    const g = document.createElementNS(NS, 'linearGradient');
-    g.id = `dye${gradN++}`;
-    g.setAttribute('gradientUnits', 'userSpaceOnUse');
-    g.setAttribute('x1', 0); g.setAttribute('x2', 0);
-    g.setAttribute('y1', y1); g.setAttribute('y2', y2);
-    for (const [off, col, op] of [[0, from, fromOp], [1, to, toOp]]) {
-      const s = document.createElementNS(NS, 'stop');
-      s.setAttribute('offset', off);
-      s.setAttribute('stop-color', col);
-      s.setAttribute('stop-opacity', op);
-      g.appendChild(s);
-    }
-    defs.appendChild(g);
-    return `url(#${g.id})`;
-  }
-  function addPath(d, stroke, width, extra = {}) {
-    const p = document.createElementNS(NS, 'path');
-    p.setAttribute('d', d);
-    p.setAttribute('stroke', stroke);
-    p.setAttribute('stroke-width', width);
-    if (extra.opacity) p.setAttribute('opacity', extra.opacity);
-    if (extra.transform) p.setAttribute('transform', extra.transform);
-    spine.appendChild(p);
-    return p;
+  let legN = 0;
+
+  /* a leg = its path in defs + a character run along it + a scroll clip */
+  function textLeg(d, y0, y1, steel, nodes = []) {
+    const id = `spineleg${legN++}`;
+    const path = document.createElementNS(NS, 'path');
+    path.id = id;
+    path.setAttribute('d', d);
+    path.setAttribute('fill', 'none');
+    defs.appendChild(path);
+
+    const clip = document.createElementNS(NS, 'clipPath');
+    clip.id = `${id}c`;
+    clip.setAttribute('clipPathUnits', 'userSpaceOnUse');
+    const rect = document.createElementNS(NS, 'rect');
+    rect.setAttribute('x', 0);
+    rect.setAttribute('width', W);
+    rect.setAttribute('y', y0 - 70);
+    rect.setAttribute('height', reduced ? (y1 - y0) + 140 : 0);
+    clip.appendChild(rect);
+    defs.appendChild(clip);
+
+    const text = document.createElementNS(NS, 'text');
+    text.setAttribute('clip-path', `url(#${id}c)`);
+    text.setAttribute('fill', steel);
+    text.setAttribute('font-family', '"Fragment Mono", monospace');
+    text.setAttribute('font-size', narrow ? '8.5' : '9.5');
+    text.setAttribute('letter-spacing', '1.5');
+    const tp = document.createElementNS(NS, 'textPath');
+    tp.setAttribute('href', `#${id}`);
+    /* enough characters to cover the path */
+    const len = (() => { const m = document.createElementNS(NS, 'path'); m.setAttribute('d', d); spine.appendChild(m); const l = m.getTotalLength(); m.remove(); return l; })();
+    tp.textContent = spineStream(Math.ceil(len / 7) + 8, 29 + legN * 17);
+    text.appendChild(tp);
+    spine.appendChild(text);
+
+    legs.push({ rect, y0, y1, span: (y1 - y0) + 140, nodes });
   }
   function addNode(x, y, fill) {
     const c = document.createElementNS(NS, 'circle');
-    c.setAttribute('cx', x); c.setAttribute('cy', y); c.setAttribute('r', 2.6);
+    c.setAttribute('cx', x); c.setAttribute('cy', y); c.setAttribute('r', 2.4);
     c.setAttribute('fill', fill);
     c.dataset.y = y;
     c.style.opacity = 0;
@@ -167,7 +202,6 @@ function buildSpine() {
     const g = (y1 - y0) * 0.55;
     return `C ${fmt(x0)},${fmt(y0 + g)} ${fmt(x1)},${fmt(y1 - g)} ${fmt(x1)},${fmt(y1)}`;
   };
-  function leg(paths, y0, y1, nodes = []) { legs.push({ paths, y0, y1, nodes }); }
 
   /* smooth in-section run with one lateral bulge, vertical tangents both ends */
   const bulgeRun = (x, y0, y1, bx) => {
@@ -176,29 +210,18 @@ function buildSpine() {
       + ` C ${fmt(x - bx)},${fmt(my + dy * 0.12)} ${fmt(x)},${fmt(y1 - dy * 0.35)} ${fmt(x)},${fmt(y1)}`;
   };
 
-  /* 0 — straight drop from the hero cue, then into the manifesto margin, cream */
-  {
-    const x = narrow ? L : L + 4;
-    const entry = man.top + Math.max(200, (man.bot - man.top) * 0.24);
-    const drop = 64;
-    const d = `M ${fmt(W / 2)},-30 L ${fmt(W / 2)},${drop} ${cross(W / 2, drop, x, entry)} L ${fmt(x)},${fmt(man.bot - inset(man))}`;
-    leg([addPath(d, 'rgba(243,239,231,.55)', 1.5)], 0, man.bot - inset(man));
-  }
-
-  /* I — IKB with a misregistered pink ghost. the press */
+  /* I — the thread falls out of the field above, into the press */
   {
     const e = inset(attcu);
     const x = narrow ? L : R;
     const px = narrow ? L : L + 4;
     const y0 = attcu.top + e, y1 = attcu.bot - e;
-    const d = `M ${fmt(px)},${fmt(man.bot - inset(man))} ${cross(px, man.bot - inset(man), x, y0)}`
+    const d = `M ${fmt(px)},-30 L ${fmt(px)},40 ${cross(px, 40, x, y0)}`
       + bulgeRun(x, y0, y1, narrow ? 4 : 22);
-    const ghost = addPath(d, dyeGradient('#FF48B4', '#FF48B4', man.bot - inset(man), y0, 0, .65), 1.5, { transform: 'translate(2.5,-2)' });
-    const ink = addPath(d, dyeGradient('#F3EFE7', '#002FA7', man.bot - inset(man), y0, .55, .9), 1.5);
-    leg([ghost, ink], man.bot - inset(man), y1);
+    textLeg(d, -30, y1, STEEL_ON_LIGHT);
   }
 
-  /* II — right-angle mono routing, dead straight. the studio */
+  /* II — right-angle routing, dead straight. the studio (light ground) */
   {
     const e = inset(sat);
     const x = narrow ? L : L;
@@ -206,11 +229,10 @@ function buildSpine() {
     const y0 = sat.top + e, y1 = sat.bot - e;
     const jogY = y0 - Math.min(60, inset(attcu));
     const d = `M ${fmt(px)},${fmt(attcu.bot - inset(attcu))} L ${fmt(px)},${fmt(jogY)} L ${fmt(x)},${fmt(jogY)} L ${fmt(x)},${fmt(y1)}`;
-    const dye = dyeGradient('#002FA7', '#0F0F0F', attcu.bot - inset(attcu), y0, .9, .85);
-    leg([addPath(d, dye, 1.5)], attcu.bot - inset(attcu), y1);
+    textLeg(d, attcu.bot - inset(attcu), y1, STEEL_ON_LIGHT);
   }
 
-  /* III — hop node to node, the net */
+  /* III — hop node to node, the net (light ground) */
   {
     const e = inset(en);
     const x = narrow ? L : R;
@@ -223,24 +245,22 @@ function buildSpine() {
     for (let k = 1; k < fr.length; k++) {
       const nx = x + offs[k], ny = y0 + (y1 - y0) * fr[k];
       d += ` L ${fmt(nx)},${fmt(ny)}`;
-      if (k < fr.length - 1) nodes.push(addNode(nx, ny, '#37444E'));
+      if (k < fr.length - 1) nodes.push(addNode(nx, ny, STEEL_ON_LIGHT));
     }
-    const dye = dyeGradient('#0F0F0F', '#37444E', sat.bot - inset(sat), y0, .85, .8);
-    leg([addPath(d, dye, 1.5)], sat.bot - inset(sat), y1, nodes);
+    textLeg(d, sat.bot - inset(sat), y1, STEEL_ON_LIGHT, nodes);
   }
 
-  /* IV — cross back left, one slow curve. the retinue */
+  /* IV — cross back left, one slow curve. the retinue (light ground) */
   {
     const e = inset(ret);
     const x = narrow ? L : L;
     const px = narrow ? L : R;
     const d = `M ${fmt(px)},${fmt(en.bot - inset(en))} ${cross(px, en.bot - inset(en), x, ret.top + e)}`
       + bulgeRun(x, ret.top + e, ret.bot - e, narrow ? -4 : -26);
-    const dye = dyeGradient('#37444E', '#3D544B', en.bot - inset(en), ret.top + e, .8, .8);
-    leg([addPath(d, dye, 1.5)], en.bot - inset(en), ret.bot - e);
+    textLeg(d, en.bot - inset(en), ret.bot - e, STEEL_ON_LIGHT);
   }
 
-  /* V — zigzag stitch, lime over black. the toolshop */
+  /* V — zigzag stitch. the toolshop (light ground) */
   {
     const e = inset(wct);
     const x = narrow ? L : R;
@@ -252,110 +272,68 @@ function buildSpine() {
     let k = 0;
     for (let y = y0 + step; y < y1; y += step, k++) d += ` L ${fmt(x + (k % 2 ? -amp : amp))},${fmt(y)}`;
     d += ` L ${fmt(x)},${fmt(y1)}`;
-    const under = addPath(d, dyeGradient('#3D544B', '#000', ret.bot - inset(ret), y0, .85, .9), 3);
-    const over = addPath(d, dyeGradient('#3D544B', '#CBFF04', ret.bot - inset(ret), y0, 0, 1), 1.5);
-    leg([under, over], ret.bot - inset(ret), y1);
+    textLeg(d, ret.bot - inset(ret), y1, STEEL_ON_LIGHT);
   }
 
-  /* VI — into the pattern book, cream again */
+  /* VI — into the pattern book (ink ground) */
   {
     const e = inset(book);
     const x = narrow ? L : L + 4;
     const px = narrow ? L : R;
     const y0 = book.top + e, y1 = book.bot - e;
     const d = `M ${fmt(px)},${fmt(wct.bot - inset(wct))} ${cross(px, wct.bot - inset(wct), x, y0)} L ${fmt(x)},${fmt(y1)}`;
-    const dye = dyeGradient('#CBFF04', '#F3EFE7', wct.bot - inset(wct), y0, .9, .55);
-    leg([addPath(d, dye, 1.5)], wct.bot - inset(wct), y1);
+    textLeg(d, wct.bot - inset(wct), y1, STEEL_ON_DARK);
   }
 
-  /* VII — home, into the braid */
+  /* VII — home: the thread descends and cascades into the sentence */
   {
     const px = narrow ? L : L + 4;
-    const d = `M ${fmt(px)},${fmt(book.bot - inset(book))} ${cross(px, book.bot - inset(book), W / 2, braidY)}`;
-    leg([addPath(d, 'rgba(243,239,231,.6)', 1.5)], book.bot - inset(book), braidY);
+    const fanY = thesisY - Math.min(200, thesisY - book.bot + 60);  /* where the delta begins */
+    const d = `M ${fmt(px)},${fmt(book.bot - inset(book))} ${cross(px, book.bot - inset(book), W / 2, fanY)}`;
+    textLeg(d, book.bot - inset(book), fanY, STEEL_ON_DARK);
+    /* the delta: the thread splits and pours across the width of the thesis */
+    const NB = narrow ? 5 : 7;
+    const spread = Math.min(thesisW * 0.92, W * 0.7);
+    const endY = thesisY - 14;
+    for (let k = 0; k < NB; k++) {
+      const fx = W / 2 + spread * (k / (NB - 1) - 0.5);
+      const bd = `M ${fmt(W / 2)},${fmt(fanY)} C ${fmt(W / 2)},${fmt(fanY + (endY - fanY) * 0.45)} ${fmt(fx)},${fmt(fanY + (endY - fanY) * 0.5)} ${fmt(fx)},${fmt(endY)}`;
+      textLeg(bd, fanY, endY, STEEL_ON_DARK);
+    }
   }
 
-  for (const l of legs) {
-    for (const p of l.paths) {
-      const len = p.getTotalLength();
-      p.dataset.len = len;
-      p.setAttribute('stroke-dasharray', len);
-      p.setAttribute('stroke-dashoffset', reduced ? 0 : len);
-    }
-    if (reduced) l.nodes.forEach((n) => { n.style.opacity = .75; });
-  }
+  if (reduced) for (const l of legs) l.nodes.forEach((n) => { n.style.opacity = .75; });
   updateSpine();
 }
 
 let fabricTop = 0;
 function updateSpine() {
-  if (reduced || !legs.length) return;
+  if (!legs.length) return;
+  const codaEl = $('.coda');
+  if (reduced) { if (codaEl) codaEl.classList.add('is-sewn'); return; }
   fabricTop = fabric.getBoundingClientRect().top + scrollY;
   const tip = scrollY + innerHeight * 0.62 - fabricTop;
+  let lastP = 0;
   for (const l of legs) {
     const p = clamp((tip - l.y0) / (l.y1 - l.y0), 0, 1);
-    for (const path of l.paths) {
-      path.setAttribute('stroke-dashoffset', (path.dataset.len * (1 - p)).toFixed(1));
-    }
+    lastP = p;
+    l.rect.setAttribute('height', (l.span * p).toFixed(1));
     for (const n of l.nodes) n.style.opacity = tip > +n.dataset.y ? .75 : 0;
   }
+  /* the delta legs finish last; when they near the sentence, sew it */
+  if (lastP > 0.72 && codaEl && !codaEl.classList.contains('is-sewn')) codaEl.classList.add('is-sewn');
 }
 
-/* ---------------- coda braid ---------------- */
+/* ---------------- the first machine: film plays only in view ---------------- */
 
-const braidCanvas = $('.braid');
-const coda = $('#selvedge');
-const BRAID_COLORS = ['#4C67D6', '#E8604A', '#718598', '#F3EFE7', '#7FA48E', '#B9D247'];
-let braidCtx, braidW = 0, braidH = 0, lastBraidP = -1;
-
-function sizeBraid() {
-  if (!braidCanvas) return;
-  const dpr = Math.min(devicePixelRatio, 2);
-  braidW = braidCanvas.clientWidth; braidH = braidCanvas.clientHeight;
-  braidCanvas.width = braidW * dpr; braidCanvas.height = braidH * dpr;
-  braidCtx = braidCanvas.getContext('2d');
-  braidCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  lastBraidP = -1;
-  drawBraid(reduced ? 1 : currentBraidP());
-}
-
-function currentBraidP() {
-  const r = coda.getBoundingClientRect();
-  return clamp((innerHeight * 0.9 - r.top) / (innerHeight * 0.75), 0, 1);
-}
-
-function drawBraid(p) {
-  if (!braidCtx || Math.abs(p - lastBraidP) < 0.004) return;
-  lastBraidP = p;
-  const w = braidW, h = braidH, cx = w / 2;
-  braidCtx.clearRect(0, 0, w, h);
-  const N = BRAID_COLORS.length;
-  const steps = 110;
-  const ease = (v) => 1 - Math.pow(1 - v, 2.4);
-  for (let i = 0; i < N; i++) {
-    braidCtx.beginPath();
-    braidCtx.strokeStyle = BRAID_COLORS[i];
-    braidCtx.globalAlpha = i === 3 ? 0.95 : 0.78;
-    braidCtx.lineWidth = i === 3 ? 2 : 1.5;
-    const x0 = cx + (i - (N - 1) / 2) * (w / (N + 1));
-    for (let s = 0; s <= steps * p; s++) {
-      const v = s / steps;
-      const gather = ease(v);
-      const amp = 30 * Math.pow(Math.sin(Math.PI * Math.min(v * 1.12, 1)), 1.4);
-      const x = x0 + (cx - x0) * gather + Math.sin(v * Math.PI * 3.2 + (i * Math.PI) / 3) * amp * (1 - v * 0.55);
-      const y = v * (h - 8);
-      s === 0 ? braidCtx.moveTo(x, y) : braidCtx.lineTo(x, y);
+const film = $('.firstmachine__film');
+if (film && !reduced) {
+  new IntersectionObserver((entries) => {
+    for (const e of entries) {
+      if (e.isIntersecting) film.play().catch(() => {});
+      else film.pause();
     }
-    braidCtx.stroke();
-  }
-  if (p > 0.985) {
-    braidCtx.globalAlpha = 1;
-    braidCtx.fillStyle = '#F3EFE7';
-    braidCtx.beginPath();
-    braidCtx.arc(cx, h - 8, 3.2, 0, Math.PI * 2);
-    braidCtx.fill();
-  }
-  braidCtx.globalAlpha = 1;
+  }, { threshold: 0.35 }).observe(film);
 }
 
 /* ---------------- scroll pump ---------------- */
@@ -366,7 +344,6 @@ function onScroll() {
   ticking = true;
   requestAnimationFrame(() => {
     updateSpine();
-    if (!reduced) drawBraid(currentBraidP());
     ticking = false;
   });
 }
@@ -459,15 +436,65 @@ if (enSection && enCanvas) {
       for (const n of nodes) { n.x *= ew / pw; n.y *= eh / ph; }
       return;
     }
-    const count = clamp(Math.round((ew * eh) / 26000), 26, 64);
+    const count = clamp(Math.round((ew * eh) / 52000), 14, 30);
     nodes = Array.from({ length: count }, () => ({
       x: Math.random() * ew, y: Math.random() * eh,
       vx: (Math.random() - 0.5) * 0.16, vy: (Math.random() - 0.5) * 0.16,
     }));
   }
 
+  /* the codex: a two-page spread constructed by the Van de Graaf canon —
+     page frames, the canon's diagonals, and each page's text block — drawn
+     as faint rule-work behind the net. The section reads as a book being
+     diagrammed, which is the EN register exactly. */
+  function drawCodex() {
+    const ph = Math.min(eh * 0.62, 760);           /* page height */
+    const pw = ph * 0.667;                          /* page width, 2:3 */
+    const top = (eh - ph) / 2;
+    const cx = ew / 2;
+    const ink = '#37444E';
+    ectx.lineWidth = 1;
+    for (const side of [-1, 1]) {
+      const x0 = side < 0 ? cx - pw : cx;           /* page rect */
+      ectx.strokeStyle = ink;
+      ectx.globalAlpha = 0.10;
+      ectx.strokeRect(x0, top, pw, ph);
+      /* canon diagonals: page diagonal + spread diagonal */
+      ectx.globalAlpha = 0.07;
+      ectx.beginPath();
+      if (side < 0) {
+        ectx.moveTo(x0, top + ph); ectx.lineTo(x0 + pw, top);          /* page diagonal */
+        ectx.moveTo(cx + pw, top + ph); ectx.lineTo(x0, top);          /* spread diagonal */
+      } else {
+        ectx.moveTo(x0 + pw, top + ph); ectx.lineTo(x0, top);
+        ectx.moveTo(cx - pw, top + ph); ectx.lineTo(x0 + pw, top);
+      }
+      ectx.stroke();
+      /* the canon's text block: margins 2/9 head+outer feel, 1/9 inner */
+      const iw = pw * 2 / 3, ih = ph * 2 / 3;
+      const inX = side < 0 ? x0 + pw / 9 : x0 + pw - pw / 9 - iw;
+      ectx.globalAlpha = 0.12;
+      ectx.strokeRect(side < 0 ? x0 + pw - pw * 2 / 9 - iw + iw : inX, 0, 0, 0); /* noop guard */
+      ectx.strokeRect(inX + (side < 0 ? pw * 2 / 9 - pw / 9 : -(pw * 2 / 9 - pw / 9)), top + ph / 9, iw, ih);
+      /* baseline rules inside the text block */
+      ectx.globalAlpha = 0.045;
+      const bx = inX + (side < 0 ? pw * 2 / 9 - pw / 9 : -(pw * 2 / 9 - pw / 9));
+      ectx.beginPath();
+      for (let k = 1; k < 9; k++) {
+        const y = top + ph / 9 + (ih * k) / 9;
+        ectx.moveTo(bx, y); ectx.lineTo(bx + iw, y);
+      }
+      ectx.stroke();
+    }
+    /* the spine of the book */
+    ectx.globalAlpha = 0.12;
+    ectx.beginPath(); ectx.moveTo(cx, top); ectx.lineTo(cx, top + ph); ectx.stroke();
+    ectx.globalAlpha = 1;
+  }
+
   function drawEn(t) {
     ectx.clearRect(0, 0, ew, eh);
+    drawCodex();
     const R = 130;
     for (const n of nodes) {
       if (!reduced) {
@@ -489,7 +516,7 @@ if (enSection && enCanvas) {
         ectx.beginPath();
         ectx.moveTo(a.x, a.y); ectx.lineTo(b.x, b.y);
         ectx.strokeStyle = '#37444E';
-        ectx.globalAlpha = (1 - d / R) * (0.1 + wake * 0.3);
+        ectx.globalAlpha = (1 - d / R) * (0.04 + wake * 0.3);
         ectx.lineWidth = 1;
         ectx.stroke();
       }
@@ -498,13 +525,13 @@ if (enSection && enCanvas) {
       const pd = Math.hypot(n.x - pointer.x, n.y - pointer.y);
       const wake = 1 - Math.min(pd, 320) / 320;
       ectx.beginPath();
-      ectx.arc(n.x, n.y, 1.7 + wake * 1.4, 0, Math.PI * 2);
+      ectx.arc(n.x, n.y, 1.4 + wake * 1.5, 0, Math.PI * 2);
       ectx.fillStyle = '#37444E';
-      ectx.globalAlpha = 0.35 + wake * 0.5;
+      ectx.globalAlpha = 0.12 + wake * 0.6;
       ectx.fill();
     }
     /* signal pulses along near edges */
-    if (!reduced && t - lastPulse > 1700 && nodes.length > 4) {
+    if (!reduced && t - lastPulse > 2600 && nodes.length > 4) {
       const a = nodes[(Math.random() * nodes.length) | 0];
       let best = null, bd = 1e9;
       for (const b of nodes) {
@@ -521,7 +548,7 @@ if (enSection && enCanvas) {
       const y = p.a.y + (p.b.y - p.a.y) * v;
       ectx.beginPath();
       ectx.arc(x, y, 2.2, 0, Math.PI * 2);
-      ectx.fillStyle = '#989F97';
+      ectx.fillStyle = '#37444E';
       ectx.globalAlpha = 1 - v;
       ectx.fill();
     }
@@ -643,7 +670,6 @@ if (impression) {
 
 function buildAll() {
   buildSpine();
-  sizeBraid();
 }
 let rsTimer;
 addEventListener('resize', () => { clearTimeout(rsTimer); rsTimer = setTimeout(buildAll, 220); });

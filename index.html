@@ -15,7 +15,9 @@
 <link rel="canonical" href="https://ciaragriffin.xyz/">
 <meta name="theme-color" content="#0B0D12">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230B0D12'/%3E%3Cpath d='M14 20 C 26 20 22 44 34 44 S 50 20 50 20' fill='none' stroke='%23F3EFE7' stroke-width='3' stroke-linecap='round'/%3E%3Cpath d='M14 32 h36' stroke='%23B8B2A6' stroke-width='1.5'/%3E%3Cpath d='M14 44 C 26 44 22 20 34 20 S 50 44 50 44' fill='none' stroke='%23CBFF04' stroke-width='2' stroke-linecap='round' opacity='.8'/%3E%3C/svg%3E">
-<link rel="preload" href="assets/fonts/fraunces-normal-100-900.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/fonts/bodoni-moda-normal-400-900.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/name/name-ciara.png" as="image">
+<link rel="preload" href="assets/name/name-griffin.png" as="image">
 <link rel="preload" href="assets/fonts/fragment-mono-normal-400.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="assets/fonts.css">
 <link rel="stylesheet" href="assets/css/main.css">
@@ -30,7 +32,6 @@
 </div>
 
 <header class="nav">
-  <a class="nav__name" href="#top">Ciara Griffin</a>
   <nav class="nav__links" aria-label="Site">
     <a href="writing/">WRITING</a>
     <a href="about/">ABOUT</a>
@@ -42,29 +43,31 @@
 
 <main id="top">
 
-  <!-- ARRIVAL -->
-  <section class="hero" aria-label="Ciara Griffin">
-    <canvas id="loom" aria-hidden="true"></canvas>
-    <div class="hero__inner">
-      <p class="hero__kicker">THINKS &middot; BUILDS &middot; RENDERS &middot; WRITES</p>
-      <h1 class="hero__name" aria-label="Ciara Griffin">
-        <span class="hero__line"><span>C</span><span>i</span><span>a</span><span>r</span><span>a</span></span>
-        <span class="hero__line"><span>G</span><span>r</span><span>i</span><span>ffi</span><span>n</span></span>
+  <!-- THE FIRST MACHINE · her film opens the page (copy to come, in her words) -->
+  <section class="firstmachine" id="the-first-machine" data-register="master">
+    <figure class="firstmachine__filmframe">
+      <video class="firstmachine__film" src="assets/film/jacquard.mp4" poster="assets/film/jacquard-poster.jpg" muted loop playsinline preload="auto" aria-label="Film of a Jacquard loom weaving, graded in ink and steel"></video>
+      <h1 class="firstmachine__name" aria-label="Ciara Griffin">
+        <img src="assets/name/name-ciara.png" alt="" draggable="false">
+        <img src="assets/name/name-griffin.png" alt="" draggable="false">
       </h1>
-      <p class="hero__whisper">we create tools and they create us.</p>
-    </div>
-    <p class="hero__cue" aria-hidden="true">FOLLOW THE THREAD<span class="hero__cueline"></span></p>
+    </figure>
+  </section>
+
+  <!-- ARRIVAL · the thread field carries the manifesto -->
+  <section class="hero" aria-label="Manifesto">
+    <canvas id="loom" aria-hidden="true"></canvas>
+    <section class="manifesto manifesto--overlaid" id="manifesto" data-register="master">
+      <div class="manifesto__panel">
+        <p class="manifesto__note" aria-hidden="true">WARP &middot; ONE<br>WEFTS &middot; FIVE</p>
+        <p class="manifesto__text">I make things that make me back. A press that cannot print the same page twice. A studio with a standing quarrel against minimalism. A net for arguments that deserve better handling than a feed gives them. A practice that composes a retinue for one principal at a time. A toolshop for the systems I could not buy. Five ventures, one loom, and running through all of it the same suspicion, held with more confidence than I should probably admit: <em>we create tools, and then they create us.</em></p>
+        <p class="manifesto__more"><a href="about/">THE LONGER VERSION</a></p>
+      </div>
+    </section>
   </section>
 
   <div class="fabric">
     <svg class="spine" aria-hidden="true" focusable="false"></svg>
-
-    <!-- MANIFESTO -->
-    <section class="manifesto" id="manifesto" data-register="master">
-      <p class="manifesto__note" aria-hidden="true">WARP &middot; ONE<br>WEFTS &middot; FIVE</p>
-      <p class="manifesto__text">I make things that make me back. A press that cannot print the same page twice. A studio with a standing quarrel against minimalism. A net for arguments that deserve better handling than a feed gives them. A practice that composes a retinue for one principal at a time. A toolshop for the systems I could not buy. Five ventures, one loom, and running through all of it the same suspicion, held with more confidence than I should probably admit: <em>we create tools, and then they create us.</em></p>
-      <p class="manifesto__more"><a href="about/">THE LONGER VERSION</a></p>
-    </section>
 
     <!-- WEFT I · AND THEN THEY CREATE US -->
     <section class="weft weft--attcu" id="and-then-they-create-us" data-register="attcu">
@@ -207,10 +210,7 @@
     <!-- THE SELVEDGE -->
     <section class="coda" id="selvedge" data-register="master">
       <p class="coda__mark">THE SELVEDGE</p>
-      <div class="coda__braid" aria-hidden="true">
-        <canvas class="braid"></canvas>
-      </div>
-      <h2 class="coda__thesis"><em>We create tools,<br>and then they create us.</em></h2>
+      <h2 class="coda__thesis"><em><span class="w" style="--d:0s">We</span> <span class="w" style="--d:.14s">create</span> <span class="w" style="--d:.28s">tools,</span><br><span class="w" style="--d:.5s">and</span> <span class="w" style="--d:.64s">then</span> <span class="w" style="--d:.78s">they</span> <span class="w" style="--d:.92s">create</span> <span class="w" style="--d:1.06s">us.</span></em></h2>
       <div class="coda__contact">
         <p class="coda__place">Barcelona &middot; Lisbon &middot; Remote</p>
         <p class="coda__links">
@@ -229,7 +229,7 @@
         <a href="https://ciaragriffin.link" target="_blank" rel="noopener">CIARAGRIFFIN.LINK</a>
       </nav>
       <footer class="coda__foot">
-        <p>Set in Fraunces and Fragment Mono. Barcelona, 2026.</p>
+        <p>Set in Bodoni Moda, Inter and Fragment Mono. Barcelona, 2026.</p>
       </footer>
     </section>
   </div>
@@ -238,6 +238,7 @@
 
 <script type="importmap">{"imports":{"three":"./assets/js/three.module.min.js"}}</script>
 <script type="module" src="assets/js/loom.js"></script>
+<script type="module" src="assets/js/film-threads.js"></script>
 <script type="module" src="assets/js/site.js"></script>
 </body>
 </html>
