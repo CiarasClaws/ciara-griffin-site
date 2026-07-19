@@ -135,23 +135,23 @@ html.js body.is-ready .veil {
 }
 /* wayfinding: writing + about, always visible, blended like the name */
 .nav__links {
-  position: fixed; top: 1.55rem; right: clamp(1.4rem, 4vw, 3rem);
+  position: fixed; top: clamp(1rem, 2.4vh, 1.6rem); right: clamp(1rem, 4vw, 3rem);
   z-index: 50;
-  display: flex; gap: clamp(1.2rem, 2.4vw, 2rem);
-  mix-blend-mode: difference;
-  transform: translateZ(0);
+  display: flex; gap: clamp(.5rem, 1.2vw, .9rem);
 }
 .nav__links a {
-  font: 400 .6rem/1 var(--f-mono);
-  letter-spacing: .3em;
+  font: 400 .72rem/1 var(--f-mono);
+  letter-spacing: .26em; text-indent: .26em;
   color: var(--cream);
   text-decoration: none;
-  opacity: .85;
-  padding-bottom: .4em;
+  padding: .62em .95em .58em;
+  background: rgba(7, 12, 23, .55);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   border-bottom: 1px solid transparent;
-  transition: opacity .3s, border-color .3s;
+  transition: background .3s, border-color .3s;
 }
-.nav__links a:hover { opacity: 1; border-color: var(--cream); }
+.nav__links a:hover { background: rgba(7, 12, 23, .8); border-color: var(--cream); }
 
 /* the state label reads as corner HUD at the foot of the viewport,
    on a chip of the current register's own ground so the spine thread
@@ -514,6 +514,13 @@ html.js body.is-ready .firstmachine__name img { opacity: 1; transform: none; }
   object-fit: cover;
   background: #04070F;
 }
+@media (max-width: 720px) {
+  /* portrait: the film fills most of the screen and the name breathes */
+  .firstmachine__film { height: min(78svh, 150vw); }
+  .firstmachine__name { inset: 12% 0 12% 0; }
+  .firstmachine__name img { height: clamp(2.4rem, 8.5vh, 5rem); max-width: 88vw; }
+}
+
 .firstmachine__caption {
   font: 400 .58rem/1.8 var(--f-mono);
   letter-spacing: .22em;
