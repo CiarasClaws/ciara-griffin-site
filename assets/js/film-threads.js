@@ -12,6 +12,21 @@ if (wrap && film) {
   wrap.insertBefore(canvas, film.nextSibling);
   const ctx = canvas.getContext('2d');
 
+  /* the machine runs alone first; the digital thread arrives a few beats in */
+  canvas.style.opacity = '0';
+  canvas.style.transition = 'opacity 2.4s ease';
+  let arrived = false;
+  const arrive = (delay) => {
+    if (arrived) return;
+    arrived = true;
+    setTimeout(() => { canvas.style.opacity = '1'; }, delay);
+  };
+  if (reduced) arrive(400);
+  else {
+    film.addEventListener('playing', () => arrive(3200), { once: true });
+    setTimeout(() => arrive(1200), 5000); /* fallback if autoplay is blocked */
+  }
+
   let W = 0, H = 0, strands = [], running = false, visible = true;
   const t0 = performance.now();
 
