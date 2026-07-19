@@ -47,6 +47,10 @@
   <section class="firstmachine" id="the-first-machine" data-register="master">
     <figure class="firstmachine__filmframe">
       <video class="firstmachine__film" src="assets/film/jacquard.mp4" poster="assets/film/jacquard-poster.jpg" muted loop playsinline preload="auto" aria-label="Film of a Jacquard loom weaving, graded in ink and steel"></video>
+      <h1 class="firstmachine__name" aria-label="Ciara Griffin">
+        <img src="assets/name/name-ciara.png" alt="" draggable="false">
+        <img src="assets/name/name-griffin.png" alt="" draggable="false">
+      </h1>
       <figcaption class="firstmachine__caption">JACQUARD LOOM &middot; THE HENRY FORD COLLECTION &middot; OBJECT 34.797.1</figcaption>
     </figure>
   </section>
@@ -54,12 +58,6 @@
   <!-- ARRIVAL -->
   <section class="hero" aria-label="Ciara Griffin">
     <canvas id="loom" aria-hidden="true"></canvas>
-    <div class="hero__inner">
-      <h1 class="hero__name" aria-label="Ciara Griffin">
-        <span class="hero__line"><span>C</span><span>i</span><span>a</span><span>r</span><span>a</span></span>
-        <span class="hero__line"><span>G</span><span>r</span><span>i</span><span>ffi</span><span>n</span></span>
-      </h1>
-    </div>
   </section>
 
   <div class="fabric">
@@ -241,6 +239,7 @@
 
 <script type="importmap">{"imports":{"three":"./assets/js/three.module.min.js"}}</script>
 <script type="module" src="assets/js/loom.js"></script>
+<script type="module" src="assets/js/film-threads.js"></script>
 <script type="module" src="assets/js/site.js"></script>
 </body>
 </html>

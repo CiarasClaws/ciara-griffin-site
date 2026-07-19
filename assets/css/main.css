@@ -478,7 +478,35 @@ html.js .reveal.is-in { opacity: 1; transform: none; }
   opacity: .92;
 }
 .firstmachine__text em { font-style: italic; }
-.firstmachine__filmframe { margin: 0; }
+.firstmachine__filmframe { margin: 0; position: relative; }
+.firstmachine__threads {
+  position: absolute; inset: 0 0 auto 0;
+  width: 100%; height: 100%;
+  z-index: 1;
+  pointer-events: none;
+}
+.firstmachine__name {
+  position: absolute; inset: 0 0 6% 0;
+  z-index: 2;
+  display: grid; place-content: center; justify-items: center;
+  gap: clamp(.6rem, 2vh, 1.4rem);
+  pointer-events: none;
+  margin: 0;
+}
+.firstmachine__name img {
+  display: block;
+  height: clamp(3rem, 11.5vh, 7.6rem);
+  width: auto;
+  max-width: 86vw;
+  object-fit: contain;
+  filter: drop-shadow(0 3px 28px rgba(4, 7, 15, .6));
+}
+html.js .firstmachine__name img {
+  opacity: 0; transform: translateY(.4em);
+  transition: opacity 1.2s var(--ease-out), transform 1.2s var(--ease-out);
+}
+html.js .firstmachine__name img + img { transition-delay: .15s; }
+html.js body.is-ready .firstmachine__name img { opacity: 1; transform: none; }
 .firstmachine__film {
   display: block;
   width: 100%;
