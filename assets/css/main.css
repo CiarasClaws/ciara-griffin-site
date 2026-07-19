@@ -46,8 +46,7 @@ html {
 body {
   background: var(--ink);
   color: var(--cream);
-  font-family: var(--f-body);
-  font-weight: 100;
+  font-family: var(--f-display);
   font-optical-sizing: auto;
   font-size: 16px;
   line-height: 1.6;
@@ -332,7 +331,6 @@ html.js .reveal.is-in { opacity: 1; transform: none; }
   opacity: .8;
 }
 .manifesto__text {
-  font-weight: 200; /* Inter hairline is unreadable at prose scale on ink; 200 keeps the thin voice */
   font-size: clamp(1.15rem, 1.9vw, 1.42rem);
   line-height: 1.78;
   font-weight: 390;
