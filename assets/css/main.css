@@ -24,7 +24,8 @@
   --g-sat: #F9F9F9;
   --g-attcu: #F4EFE3;
 
-  --f-display: "Fraunces", "Iowan Old Style", Georgia, serif;
+  --f-display: "Bodoni Moda", "Bodoni 72", Didot, "Iowan Old Style", serif;
+  --f-body: "Inter", "Helvetica Neue", Arial, sans-serif;
   --f-mono: "Fragment Mono", "SF Mono", Menlo, monospace;
 
   --ease-out: cubic-bezier(.19, 1, .22, 1);
@@ -45,7 +46,8 @@ html {
 body {
   background: var(--ink);
   color: var(--cream);
-  font-family: var(--f-display);
+  font-family: var(--f-body);
+  font-weight: 100;
   font-optical-sizing: auto;
   font-size: 16px;
   line-height: 1.6;
@@ -244,6 +246,7 @@ html.js .hero__line span {
 }
 html.js body.is-ready .hero__line span { transform: translateY(0); }
 .hero__whisper {
+  font-family: var(--f-display);
   font-style: italic;
   font-size: 1.06rem;
   color: rgba(243, 239, 231, .6);
@@ -329,6 +332,7 @@ html.js .reveal.is-in { opacity: 1; transform: none; }
   opacity: .8;
 }
 .manifesto__text {
+  font-weight: 200; /* Inter hairline is unreadable at prose scale on ink; 200 keeps the thin voice */
   font-size: clamp(1.15rem, 1.9vw, 1.42rem);
   line-height: 1.78;
   font-weight: 390;
@@ -831,6 +835,7 @@ html.js .reveal.is-in { opacity: 1; transform: none; }
 .coda__braid { width: min(680px, 88vw); height: clamp(160px, 26vh, 280px); }
 .braid { width: 100%; height: 100%; display: block; }
 .coda__thesis {
+  font-family: var(--f-display);
   font-weight: 420;
   font-size: min(clamp(2rem, 5.2vw, 4.3rem), 11vh);
   line-height: 1.16;

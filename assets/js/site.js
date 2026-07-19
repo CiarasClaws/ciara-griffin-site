@@ -321,7 +321,8 @@ function updateSpine() {
 
 const braidCanvas = $('.braid');
 const coda = $('#selvedge');
-const BRAID_COLORS = ['#4C67D6', '#E8604A', '#718598', '#F3EFE7', '#7FA48E', '#B9D247'];
+/* the braid in the hero's ink-and-steel language; the cream strand is the warp (her) */
+const BRAID_COLORS = ['#31456B', '#4A6390', '#6480AB', '#F3EFE7', '#8FA6C8', '#BFD0E8'];
 let braidCtx, braidW = 0, braidH = 0, lastBraidP = -1;
 
 function sizeBraid() {

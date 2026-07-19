@@ -86,7 +86,7 @@ function build() {
   let i = 0;
   for (const b of bundles) {
     const bPh = r() * Math.PI * 2;     /* the bundle travels together */
-    const bF = 0.45 + r() * 0.4;
+    const bF = 0.35 + r() * 0.3;
     const bright = Math.floor(r() * b.m); /* one member catches the light */
     for (let k = 0; k < b.m; k++, i++) {
       const kind = i % 5 === 2 ? 'code' : i % 7 === 4 ? 'prose' : 'bin';
@@ -95,11 +95,11 @@ function build() {
         stream: makeStream(kind, 17 + i * 13),
         baseY: (b.c + (k - (b.m - 1) / 2) * 0.035 + (r() - 0.5) * 0.02) * H,
         rowY: (0.05 + 0.9 * (i / (bundles.length * b.m - 1))) * H,
-        amp1: H * (isMobile ? 0.04 + r() * 0.06 : 0.08 + r() * 0.12),
-        amp2: H * (isMobile ? 0.003 + r() * 0.005 : 0.004 + r() * 0.008),
+        amp1: H * (isMobile ? 0.03 + r() * 0.04 : 0.045 + r() * 0.05),
+        amp2: H * (isMobile ? 0.002 + r() * 0.003 : 0.002 + r() * 0.003),
         f1: bF + (r() - 0.5) * 0.2, f2: 1.6 + r() * 1.0,
         ph: bPh + (r() - 0.5) * 0.9,
-        drift: 0.05 + r() * 0.09,
+        drift: 0.012 + r() * 0.015,   /* near-still at rest; the mouse does the moving */
         flow: (isMobile ? 8 : 11) * (0.5 + r()),
         size: (isMobile ? 9.5 : 11.5) + r() * 2.5,
         lum,
@@ -187,7 +187,7 @@ function pathY(s, x, t) {
   /* cursor: a gentle push away */
   const dx = x - mouse.x, dy = y - mouse.y;
   const d2 = dx * dx + dy * dy;
-  const push = Math.exp(-d2 / 16000) * 26 * openness;
+  const push = Math.exp(-d2 / 24000) * 34 * openness;
   y += (dy >= 0 ? 1 : -1) * push;
   /* scroll: the field sags and lets go */
   const sc = Math.min(scrollY / Math.max(innerHeight, 1), 1);
