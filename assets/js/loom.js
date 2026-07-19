@@ -133,40 +133,51 @@ function build() {
   }
 }
 
-/* ---- the name, measured from the DOM so fonts/layout stay canonical ---- */
+/* ---- the name: Ciara's own letterforms (assets/name), positioned on the
+   DOM h1's line boxes so layout, selection and a11y stay canonical ---- */
+const NAME_META = {
+  ciara: { src: 'assets/name/name-ciara.png', cap: 300, baseline: 304.9 },
+  griffin: { src: 'assets/name/name-griffin.png', cap: 300, baseline: 306.5 },
+};
+const nameImgs = {};
+let nameImgsReady = false;
+{
+  const loads = Object.entries(NAME_META).map(([k, m]) => new Promise((res) => {
+    const im = new Image();
+    im.onload = () => res(); im.onerror = () => res();
+    im.src = m.src;
+    nameImgs[k] = im;
+  }));
+  Promise.all(loads).then(() => { nameImgsReady = true; measureName(); if (reduced) frame(t0 + 7000); });
+}
 let nameSpec = null;
 function measureName() {
-  if (!heroName) return;
+  if (!heroName || !nameImgsReady) return;
   const lines = [...heroName.querySelectorAll('.hero__line')];
-  if (!lines.length) return;
+  if (lines.length < 2) return;
   const cRect = canvas.getBoundingClientRect();
   const nRect = heroName.getBoundingClientRect();
   if (nRect.width < 10) return;
-  const cs = getComputedStyle(heroName);
-  nameSpec = {
-    font: `${cs.fontWeight} ${parseFloat(cs.fontSize)}px ${cs.fontFamily}`,
-    letterSpacing: cs.letterSpacing,
-    lines: lines.map((line) => {
-      const r = line.getBoundingClientRect();
-      return {
-        text: line.textContent,
-        cx: r.left - cRect.left + r.width / 2,
-        by: r.top - cRect.top + r.height * 0.82,
-      };
-    }),
-  };
+  const capPx = parseFloat(getComputedStyle(heroName).fontSize) * 0.72;
+  nameSpec = ['ciara', 'griffin'].map((k, idx) => {
+    const m = NAME_META[k];
+    const im = nameImgs[k];
+    const r = lines[idx].getBoundingClientRect();
+    const sc = capPx / m.cap;
+    return {
+      im,
+      w: im.naturalWidth * sc, h: im.naturalHeight * sc,
+      x: r.left - cRect.left + r.width / 2 - (im.naturalWidth * sc) / 2,
+      y: r.top - cRect.top + r.height * 0.82 - m.baseline * sc,
+    };
+  });
   if (!wovenReady) { wovenReady = true; hero.classList.add('hero--woven'); }
 }
 function drawName() {
   if (!nameSpec) return;
-  ctx.save();
-  ctx.font = nameSpec.font;
-  if ('letterSpacing' in ctx) ctx.letterSpacing = nameSpec.letterSpacing;
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'alphabetic';
-  ctx.fillStyle = CREAM;
-  for (const l of nameSpec.lines) ctx.fillText(l.text, l.cx, l.by);
-  ctx.restore();
+  for (const l of nameSpec) {
+    if (l.im.naturalWidth) ctx.drawImage(l.im, l.x, l.y, l.w, l.h);
+  }
 }
 
 /* ---- drawing ---- */
