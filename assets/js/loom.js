@@ -86,18 +86,18 @@ function build() {
   let i = 0;
   for (const b of bundles) {
     const bPh = r() * Math.PI * 2;     /* the bundle travels together */
-    const bF = 0.7 + r() * 0.7;
+    const bF = 0.45 + r() * 0.4;
     const bright = Math.floor(r() * b.m); /* one member catches the light */
     for (let k = 0; k < b.m; k++, i++) {
       const kind = i % 5 === 2 ? 'code' : i % 7 === 4 ? 'prose' : 'bin';
-      const lum = k === bright ? 0.62 + r() * 0.33 : 0.14 + r() * 0.26;
+      const lum = k === bright ? 0.85 + r() * 0.15 : 0.28 + r() * 0.3;
       strands.push({
         stream: makeStream(kind, 17 + i * 13),
         baseY: (b.c + (k - (b.m - 1) / 2) * 0.035 + (r() - 0.5) * 0.02) * H,
         rowY: (0.05 + 0.9 * (i / (bundles.length * b.m - 1))) * H,
-        amp1: H * (isMobile ? 0.035 + r() * 0.06 : 0.07 + r() * 0.12),
-        amp2: H * (isMobile ? 0.008 + r() * 0.015 : 0.012 + r() * 0.028),
-        f1: bF + (r() - 0.5) * 0.25, f2: 2.6 + r() * 2.2,
+        amp1: H * (isMobile ? 0.04 + r() * 0.06 : 0.08 + r() * 0.12),
+        amp2: H * (isMobile ? 0.003 + r() * 0.005 : 0.004 + r() * 0.008),
+        f1: bF + (r() - 0.5) * 0.2, f2: 1.6 + r() * 1.0,
         ph: bPh + (r() - 0.5) * 0.9,
         drift: 0.05 + r() * 0.09,
         flow: (isMobile ? 8 : 11) * (0.5 + r()),
@@ -171,7 +171,7 @@ function drawName() {
 
 /* ---- drawing ---- */
 function smooth(a, b, x) { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); }
-function jitter(i, ph) { const v = Math.sin(i * 127.1 + ph * 311.7) * 43758.5453; return 0.72 + (v - Math.floor(v)) * 0.5; }
+function jitter(i, ph) { const v = Math.sin(i * 127.1 + ph * 311.7) * 43758.5453; return 0.82 + (v - Math.floor(v)) * 0.36; }
 
 function pathY(s, x, t) {
   const openness = smooth(s.exitX * 0.75, s.exitX * 2.4, x);
@@ -212,7 +212,7 @@ function drawStrandPass(s, t, wantFront) {
     const y = pathY(s, x, t);
     /* interlace shading inside the block; edge fade both ends */
     const weaveShade = x < s.exitX * 1.4 ? 0.7 + 0.3 * Math.abs(Math.sin(x * 0.45 + s.ph)) : 1;
-    const run = 0.55 + 0.45 * Math.sin(x * 0.0028 + s.runPh + t * 0.1); /* light travels the strand */
+    const run = 0.74 + 0.26 * Math.sin(x * 0.0028 + s.runPh + t * 0.1); /* light travels the strand */
     const env = smooth(-10, 60, x) * (1 - smooth(W * 0.92, W + 10, x));
     let a = s.lum * env * weaveShade * run * jitter(i, s.ph);
     if (x < s.exitX * 1.5) a = Math.max(a, 0.16 * env);  /* the block never goes hollow */
