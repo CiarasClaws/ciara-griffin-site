@@ -111,10 +111,10 @@ function build() {
   }
   /* warp: the vertical threads of the block */
   warpLines = [];
-  const step = isMobile ? 4.5 : 5.5;
+  const step = isMobile ? 7 : 9;
   const rw = rnd(77);
   for (let x = 3; x < blockW * 1.08; x += step * (0.8 + rw() * 0.5)) {
-    warpLines.push({ x, lum: 0.08 + rw() * 0.3, a: 0.35 + rw() * 0.65 });
+    warpLines.push({ x, lum: 0.08 + rw() * 0.3, a: 0.35 + rw() * 0.65, dead: rw() < 0.07 });
   }
   /* fillers: extra strands that live only in and just after the block */
   fillers = [];
@@ -171,6 +171,7 @@ function drawName() {
 
 /* ---- drawing ---- */
 function smooth(a, b, x) { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); }
+function ghash(n) { const v = Math.sin(n * 91.17) * 43758.5453; return v - Math.floor(v); }
 function jitter(i, ph) { const v = Math.sin(i * 127.1 + ph * 311.7) * 43758.5453; return 0.82 + (v - Math.floor(v)) * 0.36; }
 
 function pathY(s, x, t) {
@@ -233,20 +234,54 @@ function frame(now) {
   ctx.fillRect(0, 0, W, H);
 
   /* warp block */
-  /* a faint textile panel behind the block, then the warp lines */
-  const pg = ctx.createLinearGradient(0, 0, blockW * 1.35, 0);
-  pg.addColorStop(0, 'rgba(96,120,160,0.085)');
-  pg.addColorStop(0.75, 'rgba(96,120,160,0.03)');
-  pg.addColorStop(1, 'rgba(96,120,160,0)');
-  ctx.fillStyle = pg;
-  ctx.fillRect(0, 0, blockW * 1.35, H);
+  /* THE BLOCK — deliberate digital corruption, not smudge.
+     A hard-edged panel, crisp warp columns with a few dead ones, and
+     glyph rows that displace in quantised steps on a slow glitch clock:
+     some rows slip sideways, echo themselves, or flash for one beat. */
+  const gt = Math.floor(t * 2.2);            /* the glitch clock ticks ~2x/s */
+  /* two displacement bands per tick: horizontal slices that slip sideways
+     as a unit — the block corrupts in chunks, not in fog */
+  const bands = [0, 1].map((k) => {
+    const cy = ghash(gt * 1.31 + k * 57.7) * H;
+    const bh = 36 + ghash(gt * 2.17 + k * 31.3) * 90;
+    const on = ghash(gt * 3.7 + k * 11.1) < 0.65;
+    const slip = on ? Math.round((ghash(gt * 5.3 + k * 23.9) - 0.5) * 9) * 3 : 0;
+    return { y0: cy - bh / 2, y1: cy + bh / 2, slip };
+  });
+  const bandSlip = (y) => {
+    for (const b of bands) if (y > b.y0 && y < b.y1) return b.slip;
+    return 0;
+  };
+  ctx.fillStyle = 'rgba(96,120,160,0.05)';
+  ctx.fillRect(0, 0, blockW, H);
+  ctx.fillStyle = steel(0.5, 0.14);
+  ctx.fillRect(blockW, 0, 1, H);             /* hard column boundary */
   for (const w of warpLines) {
-    const fray = 1 - (w.x / (blockW * 1.1)) ** 2 * 0.45;
-    ctx.fillStyle = steel(w.lum + 0.22, 0.42 * w.a * fray);
-    ctx.fillRect(w.x, 0, 1, H);
+    if (w.dead) continue;                    /* missing columns read as glitch */
+    const fray = 1 - (w.x / (blockW * 1.1)) ** 2 * 0.3;
+    ctx.fillStyle = steel(w.lum + 0.38, 0.72 * w.a * fray);
+    /* draw each column in three runs so the bands shear it sideways */
+    let y = 0;
+    const cuts = bands.filter((b) => b.slip).sort((a, b) => a.y0 - b.y0);
+    for (const b of cuts) {
+      ctx.fillRect(w.x, y, 1, Math.max(0, b.y0 - y));
+      ctx.fillRect(w.x + b.slip, Math.max(0, b.y0), 1, b.y1 - b.y0);
+      y = b.y1;
+    }
+    ctx.fillRect(w.x, y, 1, H - y);
   }
-  /* block-only fillers */
-  for (const f of fillers) {
+  /* tear lines at the live band edges */
+  for (const b of bands) {
+    if (!b.slip) continue;
+    ctx.fillStyle = steel(0.75, 0.16);
+    ctx.fillRect(0, Math.round(b.y0), blockW + Math.abs(b.slip), 1);
+    ctx.fillRect(0, Math.round(b.y1), blockW + Math.abs(b.slip), 1);
+  }
+  for (let ri = 0; ri < fillers.length; ri++) {
+    const f = fillers[ri];
+    const h1 = ghash(ri * 7.3 + gt), h2 = ghash(ri * 13.9 + gt * 3.1), h3 = ghash(ri * 3.7 + gt * 1.7);
+    const slip = (h1 < 0.3 ? Math.round((h2 - 0.5) * 8) * 2 : 0) + bandSlip(f.rowY);
+    const flash = h3 > 0.94 ? 2.4 : 1;                             /* one-beat row flash */
     const spacing = f.size * 0.6;
     ctx.font = `400 ${f.size}px "Fragment Mono", monospace`;
     const shift = Math.floor(t * f.flow);
@@ -255,9 +290,13 @@ function frame(now) {
       if (fade <= 0.02) break;
       const ch = f.stream[(i + shift) % f.stream.length];
       if (ch === ' ') continue;
-      const shade = 0.45 + 0.55 * Math.abs(Math.sin(x * 0.5 + f.ph));
-      ctx.fillStyle = steel(f.lum + 0.22, (f.lum + 0.1) * fade * shade * 2.3);
-      ctx.fillText(ch, x, f.rowY + Math.sin(x * 0.9 + f.ph) * 2);
+      const a = Math.min(0.85, (f.lum + 0.12) * fade * 2.4 * flash);
+      ctx.fillStyle = steel(f.lum + 0.26, a);
+      ctx.fillText(ch, x + slip, f.rowY);
+      if (slip) {                             /* displacement echo */
+        ctx.fillStyle = steel(f.lum + 0.26, a * 0.3);
+        ctx.fillText(ch, x + slip + 3, f.rowY);
+      }
     }
   }
 
