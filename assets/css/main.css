@@ -452,7 +452,6 @@ html.js .reveal.is-in { opacity: 1; transform: none; }
   position: relative;
   background: var(--ink);
   color: var(--cream);
-  padding: clamp(5rem, 12vh, 9rem) 0 0;
 }
 .firstmachine__inner {
   max-width: 33em;
@@ -483,7 +482,7 @@ html.js .reveal.is-in { opacity: 1; transform: none; }
 .firstmachine__film {
   display: block;
   width: 100%;
-  max-height: 88svh;
+  height: min(92svh, 56.25vw); /* full-bleed 16:9, capped to the viewport */
   object-fit: cover;
   background: #04070F;
 }
