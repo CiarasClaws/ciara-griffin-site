@@ -830,7 +830,6 @@ html.js .reveal.is-in { opacity: 1; transform: none; }
   color: var(--metal);
   text-align: left;
 }
-.coda__braid { width: min(680px, 88vw); height: clamp(160px, 26vh, 280px); }
 .braid { width: 100%; height: 100%; display: block; }
 .coda__thesis {
   font-family: var(--f-display);
@@ -841,6 +840,17 @@ html.js .reveal.is-in { opacity: 1; transform: none; }
   margin: clamp(2rem, 5vh, 3.4rem) 0 clamp(2.4rem, 6vh, 4rem);
 }
 .coda__thesis em { font-style: italic; }
+/* the thread cascades into the sentence: words settle as the spine arrives */
+html.js .coda__thesis .w {
+  display: inline-block;
+  opacity: 0; transform: translateY(.38em);
+  transition: opacity .9s var(--ease-out), transform .9s var(--ease-out);
+  transition-delay: var(--d, 0s);
+}
+html.js .coda.is-sewn .coda__thesis .w { opacity: 1; transform: none; }
+@media (prefers-reduced-motion: reduce) {
+  html.js .coda__thesis .w { opacity: 1; transform: none; transition: none; }
+}
 .coda__contact { display: grid; gap: 1rem; justify-items: center; }
 .coda__place {
   font-style: italic;
